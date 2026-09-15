@@ -2,6 +2,8 @@
 
 لندینگ اسکرول‌محور با **موتور سه‌بعدی Three.js** — دوربین مداری و پرواز تبر با اسکرول کنترل می‌شود.
 
+**Live:** https://moh3nfa.github.io/axe/
+
 **Repo:** https://github.com/moh3nfa/axe
 
 ## Preview
