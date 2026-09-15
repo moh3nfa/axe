@@ -1,8 +1,6 @@
 # Iran Axe Throwing
 
-لندینگ اسکرول‌محور با حس صفحات محصول اپل.
-
-تبر در بک‌گراند با پارالاکس می‌چرخد، و در سکانس اصلی با اسکرول پرتاب می‌شود و به سیبل می‌خورد.
+لندینگ اسکرول‌محور با **موتور سه‌بعدی Three.js** — دوربین مداری و پرواز تبر با اسکرول کنترل می‌شود.
 
 **Repo:** https://github.com/moh3nfa/axe
 
@@ -11,8 +9,8 @@
 ### Hero
 ![Hero](docs/screenshots/01-hero.jpg)
 
-### چرخش در هوا
-![Spin](docs/screenshots/03-spin.jpg)
+### مدار دوربین / پرواز تبر
+![Orbit](docs/screenshots/03-orbit.jpg)
 
 ### برخورد
 ![Impact](docs/screenshots/05-impact.jpg)
@@ -29,13 +27,17 @@ python3 -m http.server 8765
 
 ## Stack
 
-- HTML / CSS / vanilla JS
-- GSAP + ScrollTrigger
+- Three.js `0.170` (WebGL) — `js/engine.js`
+- GSAP + ScrollTrigger — `js/app.js`
+- HTML / CSS / vanilla ES modules
 - RTL Persian + English brand
 
 ## Features
 
-- Sticky scroll throw narrative
-- Parallax spinning axes in the background
-- Cinematic hero from real venue photo
+- Sticky full-viewport WebGL scene
+- Scroll-driven camera orbit (yaw / pitch / FOV)
+- Procedural 3D axe + LIFECAMP photo decal
+- Cubic Bézier flight path + spin / tumble
+- Target wall with painted rings + venue photo crossfade
+- Impact flash and hit-photo blend
 - Booking form
