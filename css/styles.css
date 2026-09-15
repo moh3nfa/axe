@@ -161,12 +161,22 @@ button, input { font: inherit; color: inherit; }
   width: 100%;
   overflow: hidden;
   background: var(--bg);
+  perspective: 1400px;
+  perspective-origin: 50% 45%;
+}
+.camera {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  will-change: transform;
+  transform-origin: 50% 50%;
 }
 .scene-photo {
   position: absolute;
-  inset: -16% 0;
+  inset: -18% -8%;
   z-index: 0;
   will-change: transform;
+  transform-style: preserve-3d;
 }
 .scene-photo .plate {
   position: absolute;
@@ -205,6 +215,7 @@ button, input { font: inherit; color: inherit; }
   top: 68%;
   transform: translate(-50%, -50%) rotate(-35deg);
   transform-origin: 50% 16%;
+  transform-style: preserve-3d;
   filter: drop-shadow(0 28px 40px rgba(0, 0, 0, 0.75));
   opacity: 0;
   pointer-events: none;

@@ -4,6 +4,7 @@
 
   const header = document.getElementById("header");
   const scene = document.querySelector(".scene");
+  const camera = document.getElementById("camera");
   const photo = document.getElementById("scene-photo");
   const hitPlate = document.querySelector(".plate-hit");
   const veil = document.getElementById("scene-veil");
@@ -14,7 +15,7 @@
   const progress = document.getElementById("progress");
   const line = document.getElementById("line");
 
-  if (!scene || !axe) return;
+  if (!scene || !axe || !camera) return;
 
   const lines = [
     "دست را عقب ببر",
@@ -24,7 +25,6 @@
     "بولزآی.",
   ];
 
-  // header glass on scroll
   ScrollTrigger.create({
     start: 40,
     onUpdate: (self) => {
@@ -32,7 +32,6 @@
     },
   });
 
-  // elegant hero entrance
   if (!reduce) {
     gsap.from(".hero-copy > *", {
       y: 36,
@@ -44,14 +43,26 @@
     });
   }
 
+  gsap.set(camera, {
+    rotateY: 0,
+    rotateX: 0,
+    z: 0,
+    xPercent: 0,
+    yPercent: 0,
+    force3D: true,
+  });
+
   gsap.set(axe, {
     left: "16%",
     top: "70%",
     xPercent: -50,
     yPercent: -50,
     rotate: -40,
+    rotateY: 0,
+    rotateX: 0,
     scale: 0.95,
     opacity: 0,
+    force3D: true,
   });
   gsap.set(throwCopy, { opacity: 0 });
   gsap.set(hitPlate, { opacity: 0 });
@@ -68,7 +79,7 @@
       trigger: scene,
       start: "top top",
       end: "bottom bottom",
-      scrub: 0.7,
+      scrub: 0.75,
       onUpdate: (self) => {
         const p = self.progress;
         if (progress) progress.style.width = `${Math.max(0, (p - 0.16) / 0.84) * 100}%`;
@@ -83,44 +94,156 @@
     },
   });
 
-  // photo parallax + hero exit
-  tl.to(photo, { yPercent: 10, scale: 1.08, duration: 1.1 }, 0);
-  tl.to(heroCopy, { opacity: 0, y: -40, filter: "blur(6px)", duration: 0.55 }, 0.72);
-  tl.to(veil, { opacity: 0.4, duration: 0.6 }, 0.55);
+  // ─── HERO hold: camera almost flat
+  tl.to(photo, { yPercent: 8, scale: 1.06, duration: 1.0 }, 0);
+  tl.to(camera, { rotateY: -4, rotateX: 2, z: -40, duration: 1.0 }, 0);
+  tl.to(heroCopy, { opacity: 0, y: -40, filter: "blur(6px)", duration: 0.55 }, 0.7);
+  tl.to(veil, { opacity: 0.38, duration: 0.55 }, 0.55);
 
-  tl.to(axe, { opacity: 1, duration: 0.22 }, 1.0);
-  tl.to(throwCopy, { opacity: 1, duration: 0.35 }, 1.05);
+  // axe enters as we start thrower POV
+  tl.to(axe, { opacity: 1, duration: 0.22 }, 0.95);
+  tl.to(throwCopy, { opacity: 1, duration: 0.35 }, 1.0);
 
-  // wind-up
-  tl.to(axe, { left: "12%", top: "76%", rotate: -78, scale: 1.02, duration: 0.85 }, 1.15);
-  tl.to(photo, { yPercent: 16, scale: 1.12, duration: 0.85 }, 1.15);
-  tl.to(veil, { opacity: 0.26, duration: 0.85 }, 1.15);
+  // ─── WIND-UP: camera over shoulder (from thrower side)
+  tl.to(
+    camera,
+    {
+      rotateY: 14,
+      rotateX: 6,
+      z: -120,
+      xPercent: -3,
+      yPercent: 1,
+      duration: 0.9,
+    },
+    1.1
+  );
+  tl.to(axe, { left: "11%", top: "76%", rotate: -85, rotateY: 18, scale: 1.05, duration: 0.9 }, 1.1);
+  tl.to(photo, { yPercent: 14, scale: 1.12, duration: 0.9 }, 1.1);
+  tl.to(veil, { opacity: 0.28, duration: 0.9 }, 1.1);
 
-  // release + spin
-  tl.to(axe, { left: "30%", top: "50%", rotate: 260, scale: 1.12, duration: 1.2 }, 2.0);
-  tl.to(photo, { yPercent: 24, scale: 1.16, duration: 1.2 }, 2.0);
-  tl.to(veil, { opacity: 0.14, duration: 1.2 }, 2.0);
+  // ─── RELEASE: camera swings with the throw (orbit)
+  tl.to(
+    camera,
+    {
+      rotateY: -6,
+      rotateX: 1,
+      z: -60,
+      xPercent: 1,
+      yPercent: 0,
+      duration: 1.25,
+    },
+    2.0
+  );
+  tl.to(
+    axe,
+    {
+      left: "30%",
+      top: "50%",
+      rotate: 280,
+      rotateY: -25,
+      rotateX: 12,
+      scale: 1.15,
+      duration: 1.25,
+    },
+    2.0
+  );
+  tl.to(photo, { yPercent: 22, scale: 1.16, duration: 1.25 }, 2.0);
+  tl.to(veil, { opacity: 0.14, duration: 1.25 }, 2.0);
 
-  // mid-air
-  tl.to(axe, { left: "46%", top: "45%", rotate: 560, scale: 0.98, duration: 1.25 }, 3.2);
-  tl.to(photo, { yPercent: 32, scale: 1.2, duration: 1.25 }, 3.2);
-  tl.to(veil, { opacity: 0.08, duration: 1.25 }, 3.2);
+  // ─── MID-FLIGHT: dramatic low/side angle following axe
+  tl.to(
+    camera,
+    {
+      rotateY: -16,
+      rotateX: -5,
+      z: 40,
+      xPercent: 4,
+      yPercent: -2,
+      duration: 1.3,
+    },
+    3.25
+  );
+  tl.to(
+    axe,
+    {
+      left: "45%",
+      top: "45%",
+      rotate: 580,
+      rotateY: 40,
+      rotateX: -8,
+      scale: 1.0,
+      duration: 1.3,
+    },
+    3.25
+  );
+  tl.to(photo, { yPercent: 30, scale: 1.2, duration: 1.3 }, 3.25);
+  tl.to(veil, { opacity: 0.08, duration: 1.3 }, 3.25);
 
-  // approach
-  tl.to(axe, { left: "54%", top: "43%", rotate: 720, scale: 0.7, duration: 1.1 }, 4.45);
-  tl.to(photo, { yPercent: 38, scale: 1.24, duration: 1.1 }, 4.45);
-  tl.to(veil, { opacity: 0.05, duration: 1.1 }, 4.45);
+  // ─── APPROACH: camera pushes into bullseye (dolly in)
+  tl.to(
+    camera,
+    {
+      rotateY: -4,
+      rotateX: 0,
+      z: 160,
+      xPercent: 1,
+      yPercent: 0,
+      duration: 1.15,
+    },
+    4.55
+  );
+  tl.to(
+    axe,
+    {
+      left: "53%",
+      top: "43%",
+      rotate: 720,
+      rotateY: 8,
+      rotateX: 0,
+      scale: 0.72,
+      duration: 1.15,
+    },
+    4.55
+  );
+  tl.to(photo, { yPercent: 36, scale: 1.24, duration: 1.15 }, 4.55);
+  tl.to(veil, { opacity: 0.05, duration: 1.15 }, 4.55);
 
-  // impact
-  tl.to(axe, { left: "55%", top: "43%", rotate: 748, scale: 0.52, duration: 0.35 }, 5.55);
-  tl.fromTo(impact, { opacity: 0, scale: 0.2 }, { opacity: 1, scale: 15, duration: 0.32 }, 5.65);
-  tl.to(impact, { opacity: 0, duration: 0.42 }, 5.95);
-  tl.to(hitPlate, { opacity: 1, duration: 0.28 }, 5.7);
-  tl.to(axe, { opacity: 0, duration: 0.28 }, 5.72);
-  tl.fromTo(".scene-sticky", { x: 0 }, { x: 3, duration: 0.05, yoyo: true, repeat: 5 }, 5.65);
-  tl.to(photo, { yPercent: 40, scale: 1.26, duration: 0.55 }, 5.55);
-  tl.to(veil, { opacity: 0.22, duration: 0.55 }, 5.55);
-  tl.to({}, { duration: 0.75 }, 6.1);
+  // ─── IMPACT: snap camera square-on + punch
+  tl.to(
+    camera,
+    {
+      rotateY: 0,
+      rotateX: 0,
+      z: 220,
+      xPercent: 0,
+      yPercent: 0,
+      duration: 0.38,
+    },
+    5.7
+  );
+  tl.to(
+    axe,
+    {
+      left: "55%",
+      top: "43%",
+      rotate: 748,
+      rotateY: 0,
+      scale: 0.5,
+      duration: 0.35,
+    },
+    5.7
+  );
+  tl.fromTo(impact, { opacity: 0, scale: 0.2 }, { opacity: 1, scale: 16, duration: 0.3 }, 5.82);
+  tl.to(impact, { opacity: 0, duration: 0.4 }, 6.1);
+  tl.to(hitPlate, { opacity: 1, duration: 0.25 }, 5.85);
+  tl.to(axe, { opacity: 0, duration: 0.25 }, 5.88);
+  tl.fromTo(camera, { x: 0 }, { x: 5, duration: 0.05, yoyo: true, repeat: 5 }, 5.82);
+  tl.to(photo, { yPercent: 38, scale: 1.28, duration: 0.5 }, 5.7);
+  tl.to(veil, { opacity: 0.2, duration: 0.5 }, 5.7);
+
+  // settle
+  tl.to(camera, { z: 80, duration: 0.55 }, 6.2);
+  tl.to({}, { duration: 0.55 }, 6.4);
 
   gsap.from(".exp-rows article", {
     y: 40,
