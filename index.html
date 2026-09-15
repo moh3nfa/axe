@@ -4,66 +4,48 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Iran Axe Throwing</title>
-  <meta name="description" content="پرتاب تبر. اسکرول کن تا تبر بچرخد و به سیبل بخورد." />
+  <meta name="description" content="پرتاب تبر. اسکرول کن تا همان عکس پایین بیاید و تبر به سیبل بخورد." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Vazirmatn:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
-  <!-- Ambient parallax axes -->
-  <div class="parallax" aria-hidden="true">
-    <img class="px-axe far a1" data-y="0.12" data-r="160" src="assets/axe.svg" alt="" />
-    <img class="px-axe far a2" data-y="0.18" data-r="-220" src="assets/axe.svg" alt="" />
-    <img class="px-axe mid a3" data-y="0.35" data-r="380" src="assets/axe.svg" alt="" />
-    <img class="px-axe mid a4" data-y="0.42" data-r="-300" src="assets/axe.svg" alt="" />
-    <img class="px-axe near a5" data-y="0.6" data-r="520" src="assets/axe.svg" alt="" />
-  </div>
-
   <div class="grain" aria-hidden="true"></div>
 
   <header class="site-header">
     <a class="logo" href="#top">Iran Axe Throwing</a>
     <nav class="nav">
-      <a href="#throw">پرتاب</a>
+      <a href="#scene">پرتاب</a>
       <a href="#experience">تجربه</a>
       <a href="#book" class="nav-link">رزرو</a>
     </nav>
   </header>
 
   <main id="top">
-    <section class="hero">
-      <div class="hero-visual">
-        <img class="hero-photo" src="assets/hero.jpg" alt="" />
-        <div class="hero-shade"></div>
-      </div>
-      <div class="hero-text">
-        <p class="brand">Iran Axe Throwing</p>
-        <h1>پرتاب کن.<br />مرکز را بزن.</h1>
-        <p class="sub">اسکرول کن تا تبر در هوا بچرخد و به سیبل بخورد.</p>
-        <div class="cta">
-          <a class="btn btn-fill" href="#throw">شروع پرتاب</a>
-          <a class="btn btn-line" href="#book">رزرو جلسه</a>
+    <section class="scene" id="scene">
+      <div class="scene-sticky">
+        <div class="scene-photo" id="scene-photo">
+          <img class="plate plate-clean" src="assets/hero.jpg" alt="" />
+          <img class="plate plate-hit" src="assets/hero-hit.jpg" alt="" />
         </div>
-      </div>
-      <div class="scroll-cue" aria-hidden="true"><span></span></div>
-    </section>
+        <div class="scene-veil" id="scene-veil"></div>
 
-    <section class="throw" id="throw">
-      <div class="throw-sticky">
-        <div class="throw-stage">
-          <div class="target-block">
-            <img class="target-photo" src="assets/stage.jpg" alt="سیبل Iran Axe Throwing" />
-            <div class="target-shade"></div>
-            <div class="impact"></div>
+        <img class="axe" id="axe" src="assets/axe.svg" alt="" />
+        <div class="impact" id="impact"></div>
+
+        <div class="hero-copy" id="hero-copy">
+          <p class="brand">Iran Axe Throwing</p>
+          <h1>پرتاب کن.<br />مرکز را بزن.</h1>
+          <p class="sub">اسکرول کن — همان تصویر پایین می‌آید، تبر می‌چرخد و به سیبل می‌خورد.</p>
+          <div class="cta">
+            <a class="btn btn-fill" href="#book">رزرو جلسه</a>
           </div>
+        </div>
 
-          <img class="throw-axe" id="throw-axe" src="assets/axe.svg" alt="" />
-
-          <div class="throw-ui">
-            <div class="progress"><i id="progress"></i></div>
-            <p class="line" id="line">دست را عقب ببر</p>
-          </div>
+        <div class="throw-copy" id="throw-copy">
+          <div class="progress"><i id="progress"></i></div>
+          <p class="line" id="line"></p>
         </div>
       </div>
     </section>
