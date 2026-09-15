@@ -24,11 +24,11 @@
   ];
 
   gsap.set(axe, {
-    left: "18%",
-    top: "68%",
+    left: "16%",
+    top: "70%",
     xPercent: -50,
     yPercent: -50,
-    rotate: -24,
+    rotate: -40,
     scale: 0.95,
     opacity: 0,
   });
@@ -71,27 +71,27 @@
   tl.to(throwCopy, { opacity: 1, duration: 0.3 }, 1.05);
 
   // wind-up
-  tl.to(axe, { left: "12%", top: "74%", rotate: -48, scale: 1.02, duration: 0.85 }, 1.15);
+  tl.to(axe, { left: "12%", top: "76%", rotate: -78, scale: 1.02, duration: 0.85 }, 1.15);
   tl.to(photo, { yPercent: 16, scale: 1.12, duration: 0.85 }, 1.15);
   tl.to(veil, { opacity: 0.28, duration: 0.85 }, 1.15);
 
   // release + spin
-  tl.to(axe, { left: "28%", top: "50%", rotate: 220, scale: 1.08, duration: 1.2 }, 2.0);
+  tl.to(axe, { left: "30%", top: "50%", rotate: 260, scale: 1.1, duration: 1.2 }, 2.0);
   tl.to(photo, { yPercent: 24, scale: 1.16, duration: 1.2 }, 2.0);
   tl.to(veil, { opacity: 0.16, duration: 1.2 }, 2.0);
 
   // mid-air
-  tl.to(axe, { left: "44%", top: "45%", rotate: 520, scale: 0.95, duration: 1.25 }, 3.2);
+  tl.to(axe, { left: "46%", top: "45%", rotate: 560, scale: 0.98, duration: 1.25 }, 3.2);
   tl.to(photo, { yPercent: 32, scale: 1.2, duration: 1.25 }, 3.2);
   tl.to(veil, { opacity: 0.1, duration: 1.25 }, 3.2);
 
   // approach
-  tl.to(axe, { left: "54%", top: "43%", rotate: 700, scale: 0.72, duration: 1.1 }, 4.45);
+  tl.to(axe, { left: "54%", top: "43%", rotate: 720, scale: 0.7, duration: 1.1 }, 4.45);
   tl.to(photo, { yPercent: 38, scale: 1.24, duration: 1.1 }, 4.45);
   tl.to(veil, { opacity: 0.06, duration: 1.1 }, 4.45);
 
-  // IMPACT — crossfade to real photo with axe stuck
-  tl.to(axe, { left: "56%", top: "43%", rotate: 735, scale: 0.55, duration: 0.35 }, 5.55);
+  // IMPACT — crossfade to hit photo
+  tl.to(axe, { left: "55%", top: "43%", rotate: 748, scale: 0.52, duration: 0.35 }, 5.55);
   tl.fromTo(impact, { opacity: 0, scale: 0.2 }, { opacity: 1, scale: 14, duration: 0.3 }, 5.65);
   tl.to(impact, { opacity: 0, duration: 0.4 }, 5.95);
   tl.to(hitPlate, { opacity: 1, duration: 0.25 }, 5.7);

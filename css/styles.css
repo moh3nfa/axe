@@ -126,13 +126,13 @@ button, input { font: inherit; }
 .axe {
   position: absolute;
   z-index: 4;
-  width: clamp(160px, 28vw, 320px);
+  width: clamp(72px, 11vw, 128px);
   height: auto;
   left: 18%;
-  top: 70%;
-  transform: translate(-50%, -50%) rotate(-18deg);
-  transform-origin: 22% 50%;
-  filter: drop-shadow(0 22px 28px rgba(0, 0, 0, 0.65));
+  top: 68%;
+  transform: translate(-50%, -50%) rotate(-35deg);
+  transform-origin: 50% 18%;
+  filter: drop-shadow(0 24px 32px rgba(0, 0, 0, 0.7));
   opacity: 0;
   pointer-events: none;
   will-change: transform, left, top, opacity;
@@ -338,7 +338,7 @@ button, input { font: inherit; }
 
 @media (max-width: 700px) {
   .nav a:not(.nav-link) { display: none; }
-  .axe { width: min(70vw, 220px); }
+  .axe { width: clamp(64px, 18vw, 96px); }
 }
 
 @media (prefers-reduced-motion: reduce) {
