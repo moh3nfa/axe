@@ -21,6 +21,7 @@ if (!canvas || !sceneEl) {
   console.error("Missing #webgl or #scene");
 } else {
   const engine = createThrowEngine(canvas);
+  window.__axe = engine;
 
   ScrollTrigger.create({
     start: 40,

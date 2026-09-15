@@ -6,7 +6,7 @@ import * as THREE from "three";
 
 export function createThrowEngine(canvas) {
   const scene = new THREE.Scene();
-  scene.fog = new THREE.FogExp2(0x0a0908, 0.035);
+  scene.fog = new THREE.FogExp2(0x0a0908, 0.018);
 
   const renderer = new THREE.WebGLRenderer({
     canvas,
@@ -204,6 +204,8 @@ export function createThrowEngine(canvas) {
 
     // Camera orbit
     let yaw, pitch, radius, lookY, fov;
+    let axePhase = null;
+    let axeK = 0;
     if (t < 0.18) {
       const k = t / 0.18;
       yaw = THREE.MathUtils.lerp(0.15, 0.35, k);
@@ -219,37 +221,41 @@ export function createThrowEngine(canvas) {
       photo.material.opacity = 0.88;
     } else if (t < 0.32) {
       const k = (t - 0.18) / 0.14;
-      yaw = THREE.MathUtils.lerp(0.35, 1.05, easeInOut(k)); // strong over-shoulder
+      yaw = THREE.MathUtils.lerp(0.35, 1.05, easeInOut(k));
       pitch = THREE.MathUtils.lerp(0.14, 0.28, k);
       radius = THREE.MathUtils.lerp(6.0, 4.8, k);
       lookY = THREE.MathUtils.lerp(1.35, 0.95, k);
       fov = THREE.MathUtils.lerp(42, 39, k);
       axe.visible = true;
-      placeAxe(k, "windup");
+      axePhase = "windup";
+      axeK = k;
       heroFade(1 - k);
       throwFade(k);
       hitPhoto.material.opacity = 0;
-      // peel photo away so 3D wall + axe read
       photo.material.opacity = THREE.MathUtils.lerp(0.88, 0.18, k);
     } else if (t < 0.55) {
       const k = (t - 0.32) / 0.23;
-      yaw = THREE.MathUtils.lerp(1.05, -0.55, easeInOut(k)); // big swing
+      yaw = THREE.MathUtils.lerp(1.05, -0.55, easeInOut(k));
       pitch = THREE.MathUtils.lerp(0.28, 0.05, k);
       radius = THREE.MathUtils.lerp(4.8, 4.0, k);
       lookY = THREE.MathUtils.lerp(0.95, 1.35, k);
       fov = THREE.MathUtils.lerp(39, 35, k);
-      placeAxe(k, "release");
+      axe.visible = true;
+      axePhase = "release";
+      axeK = k;
       heroFade(0);
       throwFade(1);
       photo.material.opacity = THREE.MathUtils.lerp(0.18, 0.08, k);
     } else if (t < 0.75) {
       const k = (t - 0.55) / 0.2;
-      yaw = THREE.MathUtils.lerp(-0.55, -1.05, easeInOut(k)); // chase from side
+      yaw = THREE.MathUtils.lerp(-0.55, -1.05, easeInOut(k));
       pitch = THREE.MathUtils.lerp(0.05, -0.12, k);
       radius = THREE.MathUtils.lerp(4.0, 3.4, k);
       lookY = THREE.MathUtils.lerp(1.35, 1.5, k);
       fov = THREE.MathUtils.lerp(35, 33, k);
-      placeAxe(k, "flight");
+      axe.visible = true;
+      axePhase = "flight";
+      axeK = k;
       photo.material.opacity = 0.06;
     } else if (t < 0.9) {
       const k = (t - 0.75) / 0.15;
@@ -258,7 +264,9 @@ export function createThrowEngine(canvas) {
       radius = THREE.MathUtils.lerp(3.4, 2.8, k);
       lookY = 1.55;
       fov = THREE.MathUtils.lerp(33, 31, k);
-      placeAxe(k, "approach");
+      axe.visible = true;
+      axePhase = "approach";
+      axeK = k;
       photo.material.opacity = THREE.MathUtils.lerp(0.06, 0.35, k);
     } else {
       const k = (t - 0.9) / 0.1;
@@ -267,11 +275,12 @@ export function createThrowEngine(canvas) {
       radius = THREE.MathUtils.lerp(2.8, 2.45, easeOut(k));
       lookY = 1.55;
       fov = THREE.MathUtils.lerp(31, 30, k);
-      placeAxe(k, "impact");
+      axe.visible = k <= 0.45;
+      axePhase = "impact";
+      axeK = k;
       hitPhoto.material.opacity = THREE.MathUtils.smoothstep(k, 0.15, 0.65);
       photo.material.opacity = THREE.MathUtils.lerp(0.35, 0.1, k);
       flash.material.opacity = Math.sin(Math.min(k, 1) * Math.PI) * 0.9;
-      if (k > 0.45) axe.visible = false;
     }
 
     const cx = Math.sin(yaw) * Math.cos(pitch) * radius;
@@ -281,15 +290,19 @@ export function createThrowEngine(canvas) {
     camera.lookAt(0.1, lookY, 0);
     camera.fov = fov;
     camera.updateProjectionMatrix();
+    camera.updateMatrixWorld(true);
 
     targetGroup.rotation.y = yaw * -0.12;
     targetGroup.position.x = yaw * -0.2;
 
+    // Axe after camera pose so camera-space placement is correct
+    if (axePhase) placeAxe(axeK, axePhase);
+
     if (axe.visible) {
       axeLight.position.copy(axe.position).add(new THREE.Vector3(0.5, 0.7, 1.0));
-      axeLight.intensity = 32;
+      axeLight.intensity = 40;
       axeRim.position.copy(axe.position).add(new THREE.Vector3(-0.6, 0.2, 0.5));
-      axeRim.intensity = 14;
+      axeRim.intensity = 18;
     } else {
       axeLight.intensity = 3;
       axeRim.intensity = 0;
@@ -297,48 +310,65 @@ export function createThrowEngine(canvas) {
   }
 
   function placeAxe(k, phase) {
-    // wide arc through camera space so the mesh stays readable
-    const start = new THREE.Vector3(-2.4, 0.55, 4.2);
-    const mid1 = new THREE.Vector3(-1.1, 2.55, 2.8);
-    const mid2 = new THREE.Vector3(0.35, 2.35, 1.35);
-    const end = new THREE.Vector3(0.15, 1.55, 0.32);
-
-    let pos, spin, tumbleY, tumbleX, s;
+    // Place the axe in CAMERA SPACE so orbit never throws it off-screen.
+    // Three.js camera looks down -Z; x right, y up.
+    let lx, ly, lz, spin, tumbleY, tumbleX, s;
     if (phase === "windup") {
-      pos = start.clone().lerp(new THREE.Vector3(-2.7, 0.35, 4.4), k);
-      spin = THREE.MathUtils.lerp(-0.7, -1.4, k);
-      tumbleY = THREE.MathUtils.lerp(0.35, 0.95, k);
-      tumbleX = 0.2;
+      lx = THREE.MathUtils.lerp(-0.85, -1.15, k);
+      ly = THREE.MathUtils.lerp(-0.15, -0.35, k);
+      lz = THREE.MathUtils.lerp(-2.1, -2.4, k);
+      spin = THREE.MathUtils.lerp(-0.5, -1.2, k);
+      tumbleY = THREE.MathUtils.lerp(0.6, 1.15, k);
+      tumbleX = THREE.MathUtils.lerp(0.2, 0.45, k);
       s = THREE.MathUtils.lerp(1.35, 1.55, k);
       axe.visible = true;
     } else if (phase === "release") {
-      pos = cubic(start, mid1, mid2, end, k * 0.38);
-      spin = THREE.MathUtils.lerp(-1.4, Math.PI * 2.0, k);
-      tumbleY = THREE.MathUtils.lerp(0.95, -1.25, k);
-      tumbleX = THREE.MathUtils.lerp(0.2, 0.85, k);
-      s = THREE.MathUtils.lerp(1.55, 1.7, k);
+      // arc across the frame toward the target
+      const u = k;
+      lx = THREE.MathUtils.lerp(-1.1, 0.15, u);
+      ly = THREE.MathUtils.lerp(-0.3, 0.35, Math.sin(u * Math.PI));
+      lz = THREE.MathUtils.lerp(-2.35, -3.2, u);
+      spin = THREE.MathUtils.lerp(-1.2, Math.PI * 2.4, u);
+      tumbleY = THREE.MathUtils.lerp(1.15, -1.2, u);
+      tumbleX = THREE.MathUtils.lerp(0.45, 0.95, u);
+      s = THREE.MathUtils.lerp(1.55, 1.45, u);
     } else if (phase === "flight") {
-      pos = cubic(start, mid1, mid2, end, 0.38 + k * 0.38);
-      spin = Math.PI * 2.0 + k * Math.PI * 2.8;
-      tumbleY = THREE.MathUtils.lerp(-1.25, 1.35, k);
-      tumbleX = THREE.MathUtils.lerp(0.85, -0.5, k);
-      s = THREE.MathUtils.lerp(1.7, 1.35, k);
+      const u = k;
+      lx = THREE.MathUtils.lerp(0.15, 0.05, u);
+      ly = THREE.MathUtils.lerp(0.25, 0.05, u);
+      lz = THREE.MathUtils.lerp(-3.2, -4.2, u);
+      spin = Math.PI * 2.4 + u * Math.PI * 2.8;
+      tumbleY = THREE.MathUtils.lerp(-1.2, 1.0, u);
+      tumbleX = THREE.MathUtils.lerp(0.95, -0.35, u);
+      s = THREE.MathUtils.lerp(1.45, 1.15, u);
     } else if (phase === "approach") {
-      pos = cubic(start, mid1, mid2, end, 0.76 + k * 0.18);
-      spin = Math.PI * 4.8 + k * Math.PI;
-      tumbleY = THREE.MathUtils.lerp(1.35, 0.2, k);
-      tumbleX = THREE.MathUtils.lerp(-0.5, 0.05, k);
-      s = THREE.MathUtils.lerp(1.35, 0.95, k);
+      const u = k;
+      lx = THREE.MathUtils.lerp(0.05, 0.02, u);
+      ly = THREE.MathUtils.lerp(0.05, 0.0, u);
+      lz = THREE.MathUtils.lerp(-4.2, -5.4, u);
+      spin = Math.PI * 5.2 + u * Math.PI * 0.9;
+      tumbleY = THREE.MathUtils.lerp(1.0, 0.1, u);
+      tumbleX = THREE.MathUtils.lerp(-0.35, 0.05, u);
+      s = THREE.MathUtils.lerp(1.15, 0.85, u);
     } else {
-      pos = cubic(start, mid1, mid2, end, 0.94 + k * 0.06);
-      spin = Math.PI * 5.8 + k * 0.3;
+      const u = k;
+      lx = 0.02;
+      ly = 0.0;
+      lz = THREE.MathUtils.lerp(-5.4, -5.9, u);
+      spin = Math.PI * 6.1 + u * 0.2;
       tumbleY = 0.05;
       tumbleX = 0;
-      s = THREE.MathUtils.lerp(0.95, 0.7, k);
+      s = THREE.MathUtils.lerp(0.85, 0.65, u);
     }
 
-    axe.position.copy(pos);
-    axe.rotation.set(tumbleX, tumbleY, spin);
+    // Convert camera-local → world after camera pose is set
+    const local = new THREE.Vector3(lx, ly, lz);
+    local.applyMatrix4(camera.matrixWorld);
+    axe.position.copy(local);
+    axe.quaternion.copy(camera.quaternion);
+    axe.rotateX(tumbleX);
+    axe.rotateY(tumbleY);
+    axe.rotateZ(spin);
     axe.scale.setScalar(s);
   }
 
@@ -408,6 +438,17 @@ export function createThrowEngine(canvas) {
     get progress() {
       return state.progress;
     },
+    debug() {
+      const v = axe.position.clone().project(camera);
+      return {
+        progress: state.progress,
+        visible: axe.visible,
+        pos: axe.position.toArray().map((n) => +n.toFixed(3)),
+        ndc: [+v.x.toFixed(3), +v.y.toFixed(3), +v.z.toFixed(3)],
+        onScreen: Math.abs(v.x) < 1 && Math.abs(v.y) < 1 && v.z < 1 && v.z > -1,
+        photoOp: +photo.material.opacity.toFixed(3),
+      };
+    },
   };
 }
 
@@ -421,14 +462,18 @@ function buildAxe(loader) {
     metalness: 0.08,
   });
   const steel = new THREE.MeshStandardMaterial({
-    color: 0xd0d6e0,
-    roughness: 0.22,
-    metalness: 0.95,
+    color: 0xe8eef6,
+    roughness: 0.18,
+    metalness: 0.98,
+    emissive: 0x334455,
+    emissiveIntensity: 0.35,
   });
   const steelDark = new THREE.MeshStandardMaterial({
-    color: 0x7a8494,
-    roughness: 0.3,
-    metalness: 0.92,
+    color: 0x8a94a4,
+    roughness: 0.28,
+    metalness: 0.94,
+    emissive: 0x222833,
+    emissiveIntensity: 0.2,
   });
 
   // handle
