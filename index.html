@@ -3,132 +3,111 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Iran Axe Throwing — پرتاب تبر</title>
-  <meta name="description" content="تجربهٔ پرتاب تبر. اسکرول کن، تبر را در هوا بچرخان، به سیبل بزن." />
+  <title>Iran Axe Throwing</title>
+  <meta name="description" content="پرتاب تبر. اسکرول کن تا تبر بچرخد و به سیبل بخورد." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Vazirmatn:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
-  <div class="noise" aria-hidden="true"></div>
+  <!-- Ambient parallax axes -->
+  <div class="parallax" aria-hidden="true">
+    <img class="px-axe far a1" data-y="0.12" data-r="160" src="assets/axe.svg" alt="" />
+    <img class="px-axe far a2" data-y="0.18" data-r="-220" src="assets/axe.svg" alt="" />
+    <img class="px-axe mid a3" data-y="0.35" data-r="380" src="assets/axe.svg" alt="" />
+    <img class="px-axe mid a4" data-y="0.42" data-r="-300" src="assets/axe.svg" alt="" />
+    <img class="px-axe near a5" data-y="0.6" data-r="520" src="assets/axe.svg" alt="" />
+  </div>
+
+  <div class="grain" aria-hidden="true"></div>
 
   <header class="site-header">
     <a class="logo" href="#top">Iran Axe Throwing</a>
     <nav class="nav">
       <a href="#throw">پرتاب</a>
       <a href="#experience">تجربه</a>
-      <a href="#book" class="nav-cta">رزرو</a>
+      <a href="#book" class="nav-link">رزرو</a>
     </nav>
   </header>
 
   <main id="top">
-    <!-- HERO: one composition -->
     <section class="hero">
-      <div class="hero-bg" aria-hidden="true"></div>
-      <div class="hero-content">
+      <div class="hero-visual">
+        <img class="hero-photo" src="assets/hero.jpg" alt="" />
+        <div class="hero-shade"></div>
+      </div>
+      <div class="hero-text">
         <p class="brand">Iran Axe Throwing</p>
-        <h1 class="hero-title">پرتاب کن.<br />مرکز را بزن.</h1>
-        <p class="hero-sub">اسکرول کن تا تبر در هوا بچرخد و به سیبل بخورد.</p>
-        <div class="hero-actions">
-          <a class="btn btn-primary" href="#throw">شروع پرتاب</a>
-          <a class="btn btn-ghost" href="#book">رزرو جلسه</a>
+        <h1>پرتاب کن.<br />مرکز را بزن.</h1>
+        <p class="sub">اسکرول کن تا تبر در هوا بچرخد و به سیبل بخورد.</p>
+        <div class="cta">
+          <a class="btn btn-fill" href="#throw">شروع پرتاب</a>
+          <a class="btn btn-line" href="#book">رزرو جلسه</a>
         </div>
       </div>
-      <div class="scroll-hint" aria-hidden="true">
-        <span>اسکرول</span>
-        <div class="scroll-line"></div>
-      </div>
+      <div class="scroll-cue" aria-hidden="true"><span></span></div>
     </section>
 
-    <!-- THROW SCENE: Apple-style sticky scroll -->
-    <section class="throw-section" id="throw">
+    <section class="throw" id="throw">
       <div class="throw-sticky">
-        <div class="venue">
-          <div class="venue-glow" aria-hidden="true"></div>
-          <div class="lane">
-            <div class="target-stage">
-              <img class="target-img" src="assets/target.jpg?v=3" alt="سیبل Iran Axe Throwing" />
-              <div class="impact-burst" aria-hidden="true"></div>
-              <div class="impact-ring" aria-hidden="true"></div>
-            </div>
-
-            <div class="axe-stage" id="axe-stage">
-              <img class="axe" id="axe" src="assets/axe.svg" alt="" />
-              <div class="trail" aria-hidden="true"></div>
-            </div>
+        <div class="throw-stage">
+          <div class="target-block">
+            <img class="target-photo" src="assets/stage.jpg" alt="سیبل Iran Axe Throwing" />
+            <div class="target-shade"></div>
+            <div class="impact"></div>
           </div>
 
-          <div class="throw-copy">
-            <p class="chapter" data-chapter="0">دست را عقب ببر</p>
-            <p class="chapter" data-chapter="1">رها کن — تبر می‌چرخد</p>
-            <p class="chapter" data-chapter="2">مسیر هوایی</p>
-            <p class="chapter" data-chapter="3">مرکز سیبل</p>
-            <p class="chapter is-bullseye" data-chapter="4">بولزآی.</p>
-          </div>
+          <img class="throw-axe" id="throw-axe" src="assets/axe.svg" alt="" />
 
-          <div class="progress" aria-hidden="true">
-            <div class="progress-fill" id="progress-fill"></div>
+          <div class="throw-ui">
+            <div class="progress"><i id="progress"></i></div>
+            <p class="line" id="line">دست را عقب ببر</p>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- EXPERIENCE -->
+    <section class="strip">
+      <h2>چوب. فولاد. تمرکز.</h2>
+    </section>
+
     <section class="experience" id="experience">
-      <div class="exp-intro">
-        <h2>یک پرتاب. تمرکز کامل.</h2>
+      <div class="exp-head">
+        <h2>یک پرتاب.<br />تمرکز کامل.</h2>
         <p>فضای چوبی، سیبل واقعی، و حسی که فقط وقتی تبر در هواست می‌فهمی.</p>
       </div>
-
-      <div class="exp-grid">
-        <article class="exp-block exp-block--wide">
+      <div class="exp-rows">
+        <div>
           <h3>سیبل چوبی واقعی</h3>
-          <p>هر ضربه روی چوب می‌ماند. بولزآی سیاه، حلقهٔ قرمز، دایرهٔ آبی — مثل عکس واقعی باشگاه.</p>
-        </article>
-        <article class="exp-block">
+          <p>هر ضربه روی چوب می‌ماند — بولزآی سیاه، حلقه قرمز، دایره آبی.</p>
+        </div>
+        <div>
           <h3>مربی همراهت</h3>
           <p>از اولین پرتاب تا تکنیک حرفه‌ای، کنارت هستیم.</p>
-        </article>
-        <article class="exp-block">
+        </div>
+        <div>
           <h3>گروه و تولد</h3>
-          <p>تیم‌سازی، جشن، یا فقط یک شب متفاوت با دوستانت.</p>
-        </article>
+          <p>تیم‌سازی، جشن، یا یک شب متفاوت با دوستانت.</p>
+        </div>
       </div>
     </section>
 
-    <!-- STATS strip — after hero, one job -->
-    <section class="pulse">
-      <div class="pulse-inner">
-        <h2>هر پرتاب یک لحظه است.</h2>
-        <p>چوب، فولاد، و صدای برخورد — بدون حواس‌پرتی اضافه.</p>
-      </div>
-    </section>
-
-    <!-- BOOK -->
     <section class="book" id="book">
-      <div class="book-panel">
-        <p class="brand brand--sm">Iran Axe Throwing</p>
-        <h2>نوبتت را بگیر.</h2>
-        <p>جلسهٔ ۶۰ دقیقه‌ای برای ۲ تا ۸ نفر. تجهیزات و آموزش داخل پکیج است.</p>
-        <form class="book-form" action="#" method="get">
-          <label>
-            <span>نام</span>
-            <input type="text" name="name" placeholder="نام شما" required />
-          </label>
-          <label>
-            <span>موبایل</span>
-            <input type="tel" name="phone" placeholder="۰۹۱۲…" required />
-          </label>
-          <button type="submit" class="btn btn-primary btn-full">درخواست رزرو</button>
-        </form>
-      </div>
+      <p class="brand brand-sm">Iran Axe Throwing</p>
+      <h2>نوبتت را بگیر.</h2>
+      <p class="sub">جلسه ۶۰ دقیقه‌ای برای ۲ تا ۸ نفر.</p>
+      <form class="form" id="form">
+        <label><span>نام</span><input name="name" required placeholder="نام شما" /></label>
+        <label><span>موبایل</span><input name="phone" required placeholder="۰۹۱۲…" /></label>
+        <button class="btn btn-fill" type="submit">درخواست رزرو</button>
+      </form>
     </section>
   </main>
 
-  <footer class="site-footer">
+  <footer class="footer">
     <p>Iran Axe Throwing</p>
-    <p class="muted">پرتاب تبر — تجربهٔ واقعی</p>
+    <p class="tiny">پرتاب تبر — تجربه واقعی</p>
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>

@@ -1,2 +1,3 @@
 previews/
 *.log
+.DS_Store
