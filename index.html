@@ -4,21 +4,21 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Iran Axe Throwing</title>
-  <meta name="description" content="پرتاب تبر. اسکرول کن تا همان عکس پایین بیاید و تبر به سیبل بخورد." />
+  <meta name="description" content="پرتاب تبر — تجربه مدرن. اسکرول کن، تبر می‌چرخد، سیبل را بزن." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Vazirmatn:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Syne:wght@600;700;800&family=Vazirmatn:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
   <div class="grain" aria-hidden="true"></div>
 
-  <header class="site-header">
+  <header class="site-header" id="header">
     <a class="logo" href="#top">Iran Axe Throwing</a>
     <nav class="nav">
       <a href="#scene">پرتاب</a>
       <a href="#experience">تجربه</a>
-      <a href="#book" class="nav-link">رزرو</a>
+      <a class="nav-cta" href="#book">رزرو</a>
     </nav>
   </header>
 
@@ -30,16 +30,19 @@
           <img class="plate plate-hit" src="assets/hero-hit.jpg" alt="" />
         </div>
         <div class="scene-veil" id="scene-veil"></div>
+        <div class="scene-vignette" aria-hidden="true"></div>
 
         <img class="axe" id="axe" src="assets/axe.png" alt="" />
         <div class="impact" id="impact"></div>
 
         <div class="hero-copy" id="hero-copy">
+          <p class="eyebrow">Tehran · Axe Experience</p>
           <p class="brand">Iran Axe Throwing</p>
-          <h1>پرتاب کن.<br />مرکز را بزن.</h1>
-          <p class="sub">اسکرول کن — همان تصویر پایین می‌آید، تبر می‌چرخد و به سیبل می‌خورد.</p>
+          <h1>پرتاب کن.<br /><span>مرکز را بزن.</span></h1>
+          <p class="sub">اسکرول کن تا همان تصویر پایین بیاید — تبر می‌چرخد و به سیبل می‌خورد.</p>
           <div class="cta">
             <a class="btn btn-fill" href="#book">رزرو جلسه</a>
+            <a class="btn btn-ghost" href="#scene">ببین چطور</a>
           </div>
         </div>
 
@@ -51,45 +54,53 @@
     </section>
 
     <section class="strip">
-      <h2>چوب. فولاد. تمرکز.</h2>
+      <p class="eyebrow light">The craft</p>
+      <h2>چوب. فولاد.<br />تمرکز.</h2>
     </section>
 
     <section class="experience" id="experience">
       <div class="exp-head">
+        <p class="eyebrow dark">Experience</p>
         <h2>یک پرتاب.<br />تمرکز کامل.</h2>
         <p>فضای چوبی، سیبل واقعی، و حسی که فقط وقتی تبر در هواست می‌فهمی.</p>
       </div>
       <div class="exp-rows">
-        <div>
+        <article>
+          <span class="num">01</span>
           <h3>سیبل چوبی واقعی</h3>
           <p>هر ضربه روی چوب می‌ماند — بولزآی سیاه، حلقه قرمز، دایره آبی.</p>
-        </div>
-        <div>
+        </article>
+        <article>
+          <span class="num">02</span>
           <h3>مربی همراهت</h3>
           <p>از اولین پرتاب تا تکنیک حرفه‌ای، کنارت هستیم.</p>
-        </div>
-        <div>
+        </article>
+        <article>
+          <span class="num">03</span>
           <h3>گروه و تولد</h3>
           <p>تیم‌سازی، جشن، یا یک شب متفاوت با دوستانت.</p>
-        </div>
+        </article>
       </div>
     </section>
 
     <section class="book" id="book">
-      <p class="brand brand-sm">Iran Axe Throwing</p>
-      <h2>نوبتت را بگیر.</h2>
-      <p class="sub">جلسه ۶۰ دقیقه‌ای برای ۲ تا ۸ نفر.</p>
-      <form class="form" id="form">
-        <label><span>نام</span><input name="name" required placeholder="نام شما" /></label>
-        <label><span>موبایل</span><input name="phone" required placeholder="۰۹۱۲…" /></label>
-        <button class="btn btn-fill" type="submit">درخواست رزرو</button>
-      </form>
+      <div class="book-card">
+        <p class="eyebrow light">Booking</p>
+        <p class="brand brand-sm">Iran Axe Throwing</p>
+        <h2>نوبتت را بگیر.</h2>
+        <p class="sub">جلسه ۶۰ دقیقه‌ای برای ۲ تا ۸ نفر. تجهیزات و آموزش داخل پکیج است.</p>
+        <form class="form" id="form">
+          <label><span>نام</span><input name="name" required placeholder="نام شما" autocomplete="name" /></label>
+          <label><span>موبایل</span><input name="phone" required placeholder="۰۹۱۲…" autocomplete="tel" /></label>
+          <button class="btn btn-fill" type="submit">درخواست رزرو</button>
+        </form>
+      </div>
     </section>
   </main>
 
   <footer class="footer">
-    <p>Iran Axe Throwing</p>
-    <p class="tiny">پرتاب تبر — تجربه واقعی</p>
+    <span class="logo">Iran Axe Throwing</span>
+    <span class="tiny">پرتاب تبر — تجربه واقعی</span>
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
