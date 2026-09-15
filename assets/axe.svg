@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 520" fill="none">
+  <defs>
+    <linearGradient id="blade" x1="20" y1="40" x2="160" y2="120" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F4F6F8"/>
+      <stop offset="0.45" stop-color="#C8CED6"/>
+      <stop offset="1" stop-color="#8A939E"/>
+    </linearGradient>
+    <linearGradient id="handleWood" x1="108" y1="120" x2="132" y2="500" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#C4A27A"/>
+      <stop offset="0.35" stop-color="#8B5A2B"/>
+      <stop offset="1" stop-color="#5C3A1E"/>
+    </linearGradient>
+    <linearGradient id="grip" x1="100" y1="420" x2="140" y2="510" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#B91C1C"/>
+      <stop offset="1" stop-color="#7F1D1D"/>
+    </linearGradient>
+  </defs>
+  <path d="M38 78c18-34 58-58 98-52 12 2 22 14 20 27-8 48-34 86-72 108-10 6-22 2-28-8-18-28-24-52-18-75z" fill="url(#blade)" stroke="#6B7280" stroke-width="2"/>
+  <path d="M52 86c14-24 42-42 72-38 4 14-2 36-18 58-14 18-34 32-52 40 4-22 6-42-2-60z" fill="#FFFFFF" fill-opacity=".35"/>
+  <rect x="98" y="98" width="44" height="52" rx="8" fill="#4B5563"/>
+  <rect x="104" y="106" width="32" height="36" rx="5" fill="#1F2937"/>
+  <path d="M112 148c8-2 20-2 28 0l4 268c-10 8-26 8-36 0l4-268z" fill="url(#handleWood)"/>
+  <path d="M118 160h20v220h-20z" fill="#D4A574" fill-opacity=".25"/>
+  <path d="M110 420c10-4 30-4 40 0l2 78c-12 10-32 10-44 0l2-78z" fill="url(#grip)"/>
+  <path d="M116 436h28M116 452h28M116 468h28" stroke="#450A0A" stroke-opacity=".35" stroke-width="3" stroke-linecap="round"/>
+</svg>
