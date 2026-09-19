@@ -208,8 +208,8 @@ export function createThrowEngine(canvas) {
     camera.updateProjectionMatrix();
     camera.updateMatrixWorld(true);
 
-    targetGroup.rotation.y = yaw * -0.08;
-    targetGroup.position.x = yaw * -0.12;
+    targetGroup.rotation.y = 0;
+    targetGroup.position.x = 0;
 
     if (axePhase) placeAxe(axeK, axePhase);
 
