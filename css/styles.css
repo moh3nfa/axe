@@ -308,18 +308,41 @@ button, input { font: inherit; color: inherit; }
   text-shadow: 0 16px 50px rgba(0, 0, 0, 0.55);
 }
 
-/* Strip */
-.strip {
+/* Shared parallax shells */
+.plx-section {
   position: relative;
   z-index: 2;
+  overflow: hidden;
+  isolation: isolate;
+}
+.plx-layer {
+  position: absolute;
+  inset: -18% -8%;
+  pointer-events: none;
+  z-index: 0;
+  will-change: transform;
+}
+.plx-content {
+  position: relative;
+  z-index: 1;
+  will-change: transform;
+}
+
+/* Strip */
+.strip {
   min-height: 70svh;
   display: grid;
   place-content: center;
   text-align: center;
   padding: 5rem 1.5rem;
+  background: linear-gradient(165deg, #15110e 0%, #0a0908 70%);
+}
+.strip .plx-glow {
+  background: radial-gradient(ellipse 55% 45% at 50% 42%, rgba(225, 29, 18, 0.22), transparent 62%);
+}
+.strip .plx-slash {
   background:
-    radial-gradient(ellipse 60% 50% at 50% 40%, rgba(225, 29, 18, 0.16), transparent 60%),
-    linear-gradient(165deg, #15110e 0%, #0a0908 70%);
+    linear-gradient(118deg, transparent 42%, rgba(246, 240, 232, 0.04) 50%, transparent 58%);
 }
 .strip h2 {
   font-family: var(--display);
@@ -329,13 +352,175 @@ button, input { font: inherit; color: inherit; }
   margin: 0;
 }
 
+/* Materials — wood / steel story */
+.materials {
+  min-height: 110svh;
+  display: grid;
+  align-items: center;
+  padding: clamp(5rem, 12vh, 8rem) clamp(1.35rem, 5.5vw, 4.5rem);
+  background: #0c0a08;
+  color: var(--cream);
+}
+.mat-wood {
+  background:
+    linear-gradient(105deg, rgba(140, 90, 45, 0.28) 0%, transparent 48%),
+    repeating-linear-gradient(
+      92deg,
+      rgba(90, 55, 28, 0.18) 0px,
+      rgba(90, 55, 28, 0.18) 2px,
+      transparent 2px,
+      transparent 14px
+    );
+  opacity: 0.85;
+}
+.mat-steel {
+  inset: -10% 35% -10% -5%;
+  background:
+    linear-gradient(250deg, rgba(180, 195, 215, 0.14) 0%, transparent 55%),
+    repeating-linear-gradient(
+      0deg,
+      rgba(200, 210, 225, 0.06) 0px,
+      rgba(200, 210, 225, 0.06) 1px,
+      transparent 1px,
+      transparent 7px
+    );
+  mix-blend-mode: screen;
+}
+.mat-grain {
+  background:
+    radial-gradient(ellipse 40% 35% at 75% 60%, rgba(225, 29, 18, 0.18), transparent 70%);
+}
+.materials-inner {
+  max-width: 52rem;
+}
+.materials h2 {
+  font-family: var(--display);
+  font-size: clamp(2.4rem, 5.8vw, 4.4rem);
+  letter-spacing: -0.04em;
+  line-height: 1.02;
+  margin: 0 0 1rem;
+}
+.materials .lead,
+.nights .lead {
+  margin: 0 0 2.5rem;
+  color: var(--muted);
+  font-size: clamp(1rem, 1.7vw, 1.15rem);
+  max-width: 28rem;
+  line-height: 1.7;
+}
+.mat-split {
+  display: grid;
+  gap: 2.25rem;
+}
+@media (min-width: 780px) {
+  .mat-split { grid-template-columns: 1fr 1fr; gap: 3rem; }
+}
+.mat-label {
+  display: block;
+  font-family: var(--ui);
+  font-size: 0.68rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 0.65rem;
+  font-weight: 600;
+}
+.mat-col h3 {
+  font-family: var(--display);
+  font-size: clamp(1.35rem, 2.4vw, 1.7rem);
+  letter-spacing: -0.02em;
+  margin: 0 0 0.65rem;
+}
+.mat-col p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.98rem;
+  line-height: 1.7;
+  max-width: 22rem;
+}
+
+/* Nights — after-dark sessions */
+.nights {
+  min-height: 115svh;
+  display: grid;
+  align-items: center;
+  padding: clamp(5rem, 12vh, 8rem) clamp(1.35rem, 5.5vw, 4.5rem);
+  background: #080706;
+  color: var(--cream);
+}
+.night-haze {
+  background:
+    radial-gradient(ellipse 70% 55% at 30% 40%, rgba(225, 29, 18, 0.2), transparent 60%),
+    radial-gradient(ellipse 50% 40% at 80% 70%, rgba(80, 50, 20, 0.25), transparent 65%);
+}
+.night-ring {
+  background:
+    radial-gradient(circle at 68% 45%, transparent 18%, rgba(246, 240, 232, 0.05) 19%, transparent 20%),
+    radial-gradient(circle at 68% 45%, transparent 28%, rgba(225, 29, 18, 0.08) 29%, transparent 31%);
+}
+.night-embers {
+  background-image:
+    radial-gradient(circle, rgba(255, 160, 100, 0.35) 0 1.5px, transparent 2px),
+    radial-gradient(circle, rgba(225, 29, 18, 0.4) 0 1px, transparent 2px);
+  background-size: 180px 160px, 120px 140px;
+  background-position: 10% 20%, 70% 60%;
+  opacity: 0.45;
+  mix-blend-mode: screen;
+}
+.nights-inner { max-width: 36rem; }
+.nights h2 {
+  font-family: var(--display);
+  font-size: clamp(2.4rem, 5.8vw, 4.2rem);
+  letter-spacing: -0.04em;
+  line-height: 1.02;
+  margin: 0 0 1rem;
+}
+.night-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--line);
+}
+.night-list li {
+  display: grid;
+  grid-template-columns: 2.5rem 1fr;
+  gap: 1rem;
+  align-items: start;
+  padding: 1.35rem 0;
+  border-bottom: 1px solid var(--line);
+}
+.night-list span {
+  font-family: var(--ui);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+  font-weight: 600;
+  padding-top: 0.2rem;
+}
+.night-list strong {
+  display: block;
+  font-family: var(--display);
+  font-size: 1.2rem;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+.night-list em {
+  font-style: normal;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
 /* Experience */
 .experience {
-  position: relative;
-  z-index: 2;
   padding: clamp(5rem, 14vh, 9rem) clamp(1.35rem, 5.5vw, 4.5rem);
   background: var(--cream-2);
   color: var(--ink);
+}
+.exp-wash {
+  background:
+    radial-gradient(ellipse 50% 40% at 15% 20%, rgba(225, 29, 18, 0.08), transparent 55%),
+    radial-gradient(ellipse 45% 35% at 90% 80%, rgba(120, 80, 40, 0.1), transparent 60%);
 }
 .exp-head {
   max-width: 36rem;
@@ -408,14 +593,13 @@ button, input { font: inherit; color: inherit; }
 
 /* Book */
 .book {
-  position: relative;
-  z-index: 2;
   padding: clamp(5rem, 12vh, 8rem) clamp(1.25rem, 5vw, 4rem);
-  background:
-    radial-gradient(ellipse at 50% 0%, rgba(225, 29, 18, 0.12), transparent 50%),
-    linear-gradient(180deg, #0c0a08, #16120f);
+  background: linear-gradient(180deg, #0c0a08, #16120f);
   display: grid;
   place-items: center;
+}
+.book-glow {
+  background: radial-gradient(ellipse at 50% 20%, rgba(225, 29, 18, 0.18), transparent 55%);
 }
 .book-card {
   width: min(100%, 28rem);
@@ -496,9 +680,11 @@ button, input { font: inherit; color: inherit; }
   .cta { width: 100%; }
   .cta .btn { flex: 1; }
   .footer { flex-direction: column; text-align: center; }
+  .materials, .nights { min-height: auto; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .scene { height: auto; }
   .scene-sticky { position: relative; height: auto; min-height: 100svh; }
+  .plx-layer, .plx-content { transform: none !important; }
 }

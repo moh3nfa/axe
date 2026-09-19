@@ -801,56 +801,97 @@ function makePaintMaps(hex) {
   };
 }
 
-/** Brushed / worn steel for the hatchet head */
+/** Brushed / forged steel — deeper wear, heat tint, edge polish */
 function makeSteelMaps() {
-  const w = 256;
-  const h = 256;
+  const w = 512;
+  const h = 512;
   const c = document.createElement("canvas");
   c.width = w;
   c.height = h;
   const ctx = c.getContext("2d");
-  const g = ctx.createLinearGradient(0, 0, w, h);
-  g.addColorStop(0, "#f0f3f7");
-  g.addColorStop(0.35, "#c8d0da");
-  g.addColorStop(0.65, "#a8b2be");
-  g.addColorStop(1, "#d5dde6");
+
+  // Cool steel base with slight warmth near edge
+  const g = ctx.createRadialGradient(w * 0.35, h * 0.4, 20, w * 0.5, h * 0.5, w * 0.7);
+  g.addColorStop(0, "#f4f6f9");
+  g.addColorStop(0.35, "#c8d2de");
+  g.addColorStop(0.7, "#9aa7b6");
+  g.addColorStop(1, "#7a8796");
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, w, h);
 
-  // Horizontal brush lines
-  for (let i = 0; i < 120; i++) {
+  // Fine horizontal brush (mill finish)
+  for (let i = 0; i < 280; i++) {
     const y = Math.random() * h;
-    const bright = Math.random() > 0.5;
+    const bright = Math.random() > 0.45;
     ctx.strokeStyle = bright
-      ? `rgba(255,255,255,${0.04 + Math.random() * 0.1})`
-      : `rgba(30,40,50,${0.05 + Math.random() * 0.12})`;
-    ctx.lineWidth = 0.5 + Math.random() * 1.5;
+      ? `rgba(255,255,255,${0.03 + Math.random() * 0.12})`
+      : `rgba(25,32,42,${0.04 + Math.random() * 0.14})`;
+    ctx.lineWidth = 0.4 + Math.random() * 1.8;
     ctx.beginPath();
     ctx.moveTo(0, y);
-    ctx.lineTo(w, y + (Math.random() - 0.5) * 2);
+    ctx.lineTo(w, y + (Math.random() - 0.5) * 3);
     ctx.stroke();
   }
-  // Scratches / wear
-  for (let i = 0; i < 40; i++) {
-    ctx.strokeStyle = `rgba(20,25,30,${0.08 + Math.random() * 0.15})`;
-    ctx.lineWidth = 0.5;
+
+  // Diagonal forge streaks
+  for (let i = 0; i < 35; i++) {
+    ctx.strokeStyle = `rgba(255,255,255,${0.02 + Math.random() * 0.06})`;
+    ctx.lineWidth = 2 + Math.random() * 5;
+    const y = Math.random() * h;
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(w, y + 40 + Math.random() * 60);
+    ctx.stroke();
+  }
+
+  // Heat-blue / oil tint patches
+  for (let i = 0; i < 8; i++) {
+    const x = Math.random() * w;
+    const y = Math.random() * h;
+    const rg = ctx.createRadialGradient(x, y, 2, x, y, 30 + Math.random() * 50);
+    rg.addColorStop(0, `rgba(80,120,180,${0.08 + Math.random() * 0.1})`);
+    rg.addColorStop(0.5, `rgba(160,90,50,${0.04 + Math.random() * 0.06})`);
+    rg.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = rg;
+    ctx.fillRect(x - 80, y - 80, 160, 160);
+  }
+
+  // Edge polish strip (brighter band)
+  const edge = ctx.createLinearGradient(w * 0.75, 0, w, 0);
+  edge.addColorStop(0, "rgba(255,255,255,0)");
+  edge.addColorStop(0.6, "rgba(255,255,255,0.12)");
+  edge.addColorStop(1, "rgba(255,255,255,0.22)");
+  ctx.fillStyle = edge;
+  ctx.fillRect(w * 0.7, 0, w * 0.3, h);
+
+  // Deep scratches / pits
+  for (let i = 0; i < 70; i++) {
+    ctx.strokeStyle = `rgba(15,20,28,${0.1 + Math.random() * 0.2})`;
+    ctx.lineWidth = 0.6 + Math.random();
     const x = Math.random() * w;
     const y = Math.random() * h;
     ctx.beginPath();
     ctx.moveTo(x, y);
-    ctx.lineTo(x + 10 + Math.random() * 40, y + (Math.random() - 0.5) * 6);
+    ctx.lineTo(x + 8 + Math.random() * 50, y + (Math.random() - 0.5) * 8);
     ctx.stroke();
   }
+  for (let i = 0; i < 40; i++) {
+    ctx.fillStyle = `rgba(10,12,16,${0.15 + Math.random() * 0.25})`;
+    ctx.beginPath();
+    ctx.arc(Math.random() * w, Math.random() * h, 0.5 + Math.random() * 1.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
 
+  // Roughness: polished edge vs brushed body
   const r = document.createElement("canvas");
   r.width = w;
   r.height = h;
   const rctx = r.getContext("2d");
-  rctx.fillStyle = "#6a6a6a";
+  rctx.fillStyle = "#7a7a7a";
   rctx.fillRect(0, 0, w, h);
-  for (let i = 0; i < 100; i++) {
+  for (let i = 0; i < 200; i++) {
     const y = Math.random() * h;
-    const v = 40 + Math.random() * 160;
+    const v = 30 + Math.random() * 180;
     rctx.strokeStyle = `rgb(${v},${v},${v})`;
     rctx.lineWidth = 1;
     rctx.beginPath();
@@ -858,14 +899,245 @@ function makeSteelMaps() {
     rctx.lineTo(w, y);
     rctx.stroke();
   }
+  // Smooth (dark in roughness = glossy) along cutting edge
+  const rg = rctx.createLinearGradient(w * 0.7, 0, w, 0);
+  rg.addColorStop(0, "rgba(180,180,180,0)");
+  rg.addColorStop(1, "rgba(35,35,35,0.85)");
+  rctx.fillStyle = rg;
+  rctx.fillRect(w * 0.65, 0, w * 0.35, h);
+
+  // Metalness map — high everywhere, slightly less on pitted areas
+  const m = document.createElement("canvas");
+  m.width = w;
+  m.height = h;
+  const mctx = m.getContext("2d");
+  mctx.fillStyle = "#e8e8e8";
+  mctx.fillRect(0, 0, w, h);
+  for (let i = 0; i < 50; i++) {
+    mctx.fillStyle = `rgba(120,120,120,${0.2 + Math.random() * 0.3})`;
+    mctx.beginPath();
+    mctx.arc(Math.random() * w, Math.random() * h, 2 + Math.random() * 8, 0, Math.PI * 2);
+    mctx.fill();
+  }
+
+  // Bump from brush + pits
+  const b = document.createElement("canvas");
+  b.width = w;
+  b.height = h;
+  const bctx = b.getContext("2d");
+  bctx.fillStyle = "#808080";
+  bctx.fillRect(0, 0, w, h);
+  for (let i = 0; i < 150; i++) {
+    const y = Math.random() * h;
+    const v = 90 + Math.random() * 70;
+    bctx.strokeStyle = `rgb(${v},${v},${v})`;
+    bctx.lineWidth = 1 + Math.random();
+    bctx.beginPath();
+    bctx.moveTo(0, y);
+    bctx.lineTo(w, y);
+    bctx.stroke();
+  }
 
   const map = new THREE.CanvasTexture(c);
   map.colorSpace = THREE.SRGBColorSpace;
+  map.anisotropy = 8;
+  const roughnessMap = new THREE.CanvasTexture(r);
+  roughnessMap.anisotropy = 4;
+  const metalnessMap = new THREE.CanvasTexture(m);
+  const bumpMap = new THREE.CanvasTexture(b);
+  bumpMap.anisotropy = 4;
+  return { map, roughnessMap, metalnessMap, bumpMap };
+}
+
+/** Hickory handle wood — tight longitudinal grain, oil sheen, grip wear */
+function makeHandleWoodMaps() {
+  const w = 256;
+  const h = 1024;
+  const c = document.createElement("canvas");
+  c.width = w;
+  c.height = h;
+  const ctx = c.getContext("2d");
+
+  // Warm hickory base
+  const base = ctx.createLinearGradient(0, 0, w, 0);
+  base.addColorStop(0, "#8b5a32");
+  base.addColorStop(0.25, "#c9955c");
+  base.addColorStop(0.5, "#e0b87a");
+  base.addColorStop(0.72, "#b87a42");
+  base.addColorStop(1, "#9a6238");
+  ctx.fillStyle = base;
+  ctx.fillRect(0, 0, w, h);
+
+  // Longitudinal grain (along handle length = Y on UV)
+  for (let i = 0; i < 70; i++) {
+    const x = (i / 70) * w + Math.sin(i) * 3;
+    ctx.strokeStyle = `rgba(${40 + Math.random() * 30},${20 + Math.random() * 15},8,${0.1 + Math.random() * 0.22})`;
+    ctx.lineWidth = 0.5 + Math.random() * 2;
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    let xx = x;
+    for (let y = 0; y <= h; y += 20) {
+      xx += Math.sin(y * 0.008 + i * 0.4) * 1.8;
+      ctx.lineTo(xx, y);
+    }
+    ctx.stroke();
+  }
+
+  // Growth-ring curves near ends
+  for (let i = 0; i < 12; i++) {
+    const y = 30 + i * 18;
+    ctx.strokeStyle = `rgba(60,30,12,${0.08 + Math.random() * 0.12})`;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.ellipse(w / 2, y, 20 + i * 2, 6 + i * 0.5, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  for (let i = 0; i < 12; i++) {
+    const y = h - 30 - i * 18;
+    ctx.strokeStyle = `rgba(60,30,12,${0.08 + Math.random() * 0.12})`;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.ellipse(w / 2, y, 20 + i * 2, 6 + i * 0.5, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  // Oil darkening / hand polish mid-handle
+  const oil = ctx.createRadialGradient(w / 2, h * 0.55, 10, w / 2, h * 0.55, w * 0.7);
+  oil.addColorStop(0, "rgba(90,50,20,0.18)");
+  oil.addColorStop(1, "rgba(90,50,20,0)");
+  ctx.fillStyle = oil;
+  ctx.fillRect(0, 0, w, h);
+
+  // Grip wear near bottom
+  for (let i = 0; i < 200; i++) {
+    ctx.fillStyle = `rgba(255,220,170,${Math.random() * 0.08})`;
+    ctx.fillRect(Math.random() * w, h * 0.7 + Math.random() * h * 0.28, 1, 1 + Math.random() * 3);
+  }
+
+  // Pores
+  for (let i = 0; i < 800; i++) {
+    ctx.fillStyle = `rgba(35,18,8,${Math.random() * 0.2})`;
+    ctx.fillRect(Math.random() * w, Math.random() * h, 1, 1 + Math.random() * 4);
+  }
+
+  // Small check / split lines
+  for (let i = 0; i < 6; i++) {
+    const x = 20 + Math.random() * (w - 40);
+    ctx.strokeStyle = `rgba(30,15,8,${0.15 + Math.random() * 0.2})`;
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    ctx.moveTo(x, Math.random() * h * 0.3);
+    ctx.lineTo(x + (Math.random() - 0.5) * 8, h * 0.4 + Math.random() * h * 0.4);
+    ctx.stroke();
+  }
+
+  const rough = document.createElement("canvas");
+  rough.width = w;
+  rough.height = h;
+  const rctx = rough.getContext("2d");
+  rctx.fillStyle = "#8a8a8a";
+  rctx.fillRect(0, 0, w, h);
+  for (let i = 0; i < 100; i++) {
+    const x = Math.random() * w;
+    rctx.strokeStyle = `rgba(${40 + Math.random() * 100},${40 + Math.random() * 100},${40 + Math.random() * 100},0.5)`;
+    rctx.lineWidth = 1 + Math.random() * 2;
+    rctx.beginPath();
+    rctx.moveTo(x, 0);
+    rctx.lineTo(x + Math.sin(i) * 4, h);
+    rctx.stroke();
+  }
+  // Smoother (oiled) mid section
+  const sg = rctx.createLinearGradient(0, h * 0.35, 0, h * 0.75);
+  sg.addColorStop(0, "rgba(200,200,200,0)");
+  sg.addColorStop(0.5, "rgba(40,40,40,0.55)");
+  sg.addColorStop(1, "rgba(200,200,200,0)");
+  rctx.fillStyle = sg;
+  rctx.fillRect(0, 0, w, h);
+
+  const bump = document.createElement("canvas");
+  bump.width = w;
+  bump.height = h;
+  const bctx = bump.getContext("2d");
+  bctx.fillStyle = "#787878";
+  bctx.fillRect(0, 0, w, h);
+  for (let i = 0; i < 80; i++) {
+    const x = Math.random() * w;
+    const v = 100 + Math.random() * 80;
+    bctx.strokeStyle = `rgb(${v},${v},${v})`;
+    bctx.lineWidth = 1 + Math.random() * 2.5;
+    bctx.beginPath();
+    bctx.moveTo(x, 0);
+    bctx.bezierCurveTo(x + 3, h * 0.3, x - 3, h * 0.7, x + 1, h);
+    bctx.stroke();
+  }
+
+  const map = new THREE.CanvasTexture(c);
+  map.colorSpace = THREE.SRGBColorSpace;
+  map.anisotropy = 8;
+  map.wrapS = map.wrapT = THREE.RepeatWrapping;
+  const roughnessMap = new THREE.CanvasTexture(rough);
+  roughnessMap.wrapS = roughnessMap.wrapT = THREE.RepeatWrapping;
+  roughnessMap.anisotropy = 4;
+  const bumpMap = new THREE.CanvasTexture(bump);
+  bumpMap.wrapS = bumpMap.wrapT = THREE.RepeatWrapping;
+  bumpMap.anisotropy = 4;
+  return { map, roughnessMap, bumpMap };
+}
+
+/** Red leather wrap — grain + stitch marks */
+function makeLeatherMaps() {
+  const w = 256;
+  const h = 256;
+  const c = document.createElement("canvas");
+  c.width = w;
+  c.height = h;
+  const ctx = c.getContext("2d");
+  const g = ctx.createLinearGradient(0, 0, w, h);
+  g.addColorStop(0, "#5c100c");
+  g.addColorStop(0.4, "#8a1c14");
+  g.addColorStop(0.7, "#6e1510");
+  g.addColorStop(1, "#4a0c08");
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, w, h);
+  for (let i = 0; i < 900; i++) {
+    const x = Math.random() * w;
+    const y = Math.random() * h;
+    ctx.fillStyle = `rgba(${20 + Math.random() * 40},${5 + Math.random() * 10},5,${0.08 + Math.random() * 0.2})`;
+    ctx.beginPath();
+    ctx.ellipse(x, y, 1 + Math.random() * 3, 0.6 + Math.random() * 1.5, Math.random() * Math.PI, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  for (let i = 0; i < 18; i++) {
+    const y = 12 + i * 14;
+    ctx.strokeStyle = `rgba(255,180,140,${0.06 + Math.random() * 0.08})`;
+    ctx.lineWidth = 0.8;
+    ctx.setLineDash([2, 6 + Math.random() * 4]);
+    ctx.beginPath();
+    ctx.moveTo(8, y);
+    ctx.lineTo(w - 8, y + (Math.random() - 0.5) * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  const bump = document.createElement("canvas");
+  bump.width = w;
+  bump.height = h;
+  const bctx = bump.getContext("2d");
+  bctx.fillStyle = "#787878";
+  bctx.fillRect(0, 0, w, h);
+  for (let i = 0; i < 400; i++) {
+    const v = 70 + Math.random() * 90;
+    bctx.fillStyle = `rgb(${v},${v},${v})`;
+    bctx.beginPath();
+    bctx.ellipse(Math.random() * w, Math.random() * h, 1 + Math.random() * 2.5, 0.8, 0, 0, Math.PI * 2);
+    bctx.fill();
+  }
+  const map = new THREE.CanvasTexture(c);
+  map.colorSpace = THREE.SRGBColorSpace;
+  map.wrapS = map.wrapT = THREE.RepeatWrapping;
   map.anisotropy = 4;
-  return {
-    map,
-    roughnessMap: new THREE.CanvasTexture(r),
-  };
+  const bumpMap = new THREE.CanvasTexture(bump);
+  bumpMap.wrapS = bumpMap.wrapT = THREE.RepeatWrapping;
+  return { map, bumpMap };
 }
 
 function buildChips() {
@@ -900,40 +1172,57 @@ function buildChips() {
 function buildHatchet() {
   const g = new THREE.Group();
 
-  const handleWood = makeWoodMaps(256, 512);
-  handleWood.map.colorSpace = THREE.SRGBColorSpace;
-  handleWood.map.wrapS = handleWood.map.wrapT = THREE.RepeatWrapping;
-  handleWood.map.repeat.set(1, 2);
+  const handleWood = makeHandleWoodMaps();
   const wood = new THREE.MeshStandardMaterial({
     map: handleWood.map,
     roughnessMap: handleWood.roughnessMap,
     bumpMap: handleWood.bumpMap,
-    bumpScale: 0.02,
-    roughness: 0.72,
-    metalness: 0.04,
-    color: 0xe8c49a,
+    bumpScale: 0.045,
+    roughness: 0.68,
+    metalness: 0.06,
+    color: 0xffffff,
   });
 
   const steelMaps = makeSteelMaps();
   const steel = new THREE.MeshStandardMaterial({
     map: steelMaps.map,
     roughnessMap: steelMaps.roughnessMap,
-    roughness: 0.28,
-    metalness: 0.96,
-    emissive: 0x222833,
-    emissiveIntensity: 0.12,
+    metalnessMap: steelMaps.metalnessMap,
+    bumpMap: steelMaps.bumpMap,
+    bumpScale: 0.018,
+    roughness: 0.32,
+    metalness: 1.0,
+    envMapIntensity: 1.2,
+    emissive: 0x1a222c,
+    emissiveIntensity: 0.08,
   });
   const steelDark = new THREE.MeshStandardMaterial({
     map: steelMaps.map,
     roughnessMap: steelMaps.roughnessMap,
-    color: 0x8892a0,
-    roughness: 0.4,
-    metalness: 0.9,
+    metalnessMap: steelMaps.metalnessMap,
+    bumpMap: steelMaps.bumpMap,
+    bumpScale: 0.015,
+    color: 0x9aa4b2,
+    roughness: 0.42,
+    metalness: 0.95,
   });
+  const leather = makeLeatherMaps();
   const wrapMat = new THREE.MeshStandardMaterial({
-    color: 0x8b1a12,
-    roughness: 0.55,
-    metalness: 0.1,
+    map: leather.map,
+    bumpMap: leather.bumpMap,
+    bumpScale: 0.04,
+    color: 0xffffff,
+    roughness: 0.62,
+    metalness: 0.06,
+  });
+  const gripMat = new THREE.MeshStandardMaterial({
+    map: handleWood.map,
+    roughnessMap: handleWood.roughnessMap,
+    bumpMap: handleWood.bumpMap,
+    bumpScale: 0.05,
+    color: 0x6b4228,
+    roughness: 0.82,
+    metalness: 0.03,
   });
 
   // —— Handle (wood) ——
@@ -963,7 +1252,7 @@ function buildHatchet() {
 
   const grip = new THREE.Mesh(
     new THREE.CylinderGeometry(0.06, 0.078, 0.28, 16),
-    new THREE.MeshStandardMaterial({ color: 0x5c3a1e, roughness: 0.75 })
+    gripMat
   );
   grip.position.y = -1.28;
   grip.castShadow = true;

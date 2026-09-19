@@ -25,6 +25,8 @@
     <a class="logo" href="#top">Iran Axe Throwing</a>
     <nav class="nav">
       <a href="#scene">پرتاب</a>
+      <a href="#materials">چوب و فولاد</a>
+      <a href="#nights">شب‌ها</a>
       <a href="#experience">تجربه</a>
       <a class="nav-cta" href="#book">رزرو</a>
     </nav>
@@ -55,18 +57,82 @@
       </div>
     </section>
 
-    <section class="strip">
-      <p class="eyebrow light">The craft</p>
-      <h2>چوب. فولاد.<br />تمرکز.</h2>
+    <section class="strip plx-section" data-plx>
+      <div class="plx-layer plx-glow" data-speed="0.25" aria-hidden="true"></div>
+      <div class="plx-layer plx-slash" data-speed="0.45" aria-hidden="true"></div>
+      <div class="plx-content" data-speed="0.7">
+        <p class="eyebrow light">The craft</p>
+        <h2>چوب. فولاد.<br />تمرکز.</h2>
+      </div>
     </section>
 
-    <section class="experience" id="experience">
-      <div class="exp-head">
+    <!-- New: materials parallax -->
+    <section class="materials plx-section" id="materials" data-plx>
+      <div class="plx-layer mat-wood" data-speed="0.2" aria-hidden="true"></div>
+      <div class="plx-layer mat-steel" data-speed="0.4" aria-hidden="true"></div>
+      <div class="plx-layer mat-grain" data-speed="0.55" aria-hidden="true"></div>
+      <div class="materials-inner plx-content" data-speed="0.85">
+        <p class="eyebrow light">Materials</p>
+        <h2>از دسته تا تیغه.</h2>
+        <p class="lead">هیکوری روغن‌خورده در دستت می‌نشیند؛ فولاد آهنگری‌شده نور را مثل لبهٔ تبر می‌گیرد.</p>
+        <div class="mat-split">
+          <div class="mat-col">
+            <span class="mat-label">Wood</span>
+            <h3>دستهٔ هیکوری</h3>
+            <p>رگهٔ طولی، سایشِ کف دست، و روغنی که چوب را زنده نگه می‌دارد — نه پلاستیک، نه رنگ مصنوعی.</p>
+          </div>
+          <div class="mat-col">
+            <span class="mat-label">Steel</span>
+            <h3>تیغهٔ آهنگری</h3>
+            <p>براش افقی، حرارت آبی روی گونه، و لبه‌ای که برق می‌زند وقتی نور سالن می‌خورد.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- New: nights / sessions parallax -->
+    <section class="nights plx-section" id="nights" data-plx>
+      <div class="plx-layer night-haze" data-speed="0.18" aria-hidden="true"></div>
+      <div class="plx-layer night-ring" data-speed="0.35" aria-hidden="true"></div>
+      <div class="plx-layer night-embers" data-speed="0.5" aria-hidden="true"></div>
+      <div class="nights-inner plx-content" data-speed="0.8">
+        <p class="eyebrow light">After dark</p>
+        <h2>شب‌هایی که<br />چوب صدا می‌دهد.</h2>
+        <p class="lead">نور کم، سیبل نزدیک، و صدای برخوردی که فقط توی سالن می‌شنوی.</p>
+        <ul class="night-list">
+          <li>
+            <span>۱</span>
+            <div>
+              <strong>پرتاب دونفره</strong>
+              <em>۶۰ دقیقه · تمرکز و رقابت دوستانه</em>
+            </div>
+          </li>
+          <li>
+            <span>۲</span>
+            <div>
+              <strong>شب تیم</strong>
+              <em>تا ۸ نفر · مربی و تجهیزات کامل</em>
+            </div>
+          </li>
+          <li>
+            <span>۳</span>
+            <div>
+              <strong>تولد و جشن</strong>
+              <em>فضای خصوصی · نور و موسیقی ملایم</em>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="experience plx-section" id="experience" data-plx>
+      <div class="plx-layer exp-wash" data-speed="0.3" aria-hidden="true"></div>
+      <div class="exp-head plx-content" data-speed="0.75">
         <p class="eyebrow dark">Experience</p>
         <h2>یک پرتاب.<br />تمرکز کامل.</h2>
         <p>فضای چوبی، سیبل واقعی، و حسی که فقط وقتی تبر در هواست می‌فهمی.</p>
       </div>
-      <div class="exp-rows">
+      <div class="exp-rows plx-content" data-speed="0.9">
         <article>
           <span class="num">01</span>
           <h3>سیبل چوبی واقعی</h3>
@@ -85,8 +151,9 @@
       </div>
     </section>
 
-    <section class="book" id="book">
-      <div class="book-card">
+    <section class="book plx-section" id="book" data-plx>
+      <div class="plx-layer book-glow" data-speed="0.28" aria-hidden="true"></div>
+      <div class="book-card plx-content" data-speed="0.7">
         <p class="eyebrow light">Booking</p>
         <p class="brand brand-sm">Iran Axe Throwing</p>
         <h2>نوبتت را بگیر.</h2>

@@ -8,6 +8,7 @@ const header = document.getElementById("header");
 const progress = document.getElementById("progress");
 const line = document.getElementById("line");
 const form = document.getElementById("form");
+const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 const lines = [
   "دست را عقب ببر",
@@ -49,9 +50,37 @@ if (!canvas || !sceneEl) {
     },
   });
 
-  // kick first frame sizing
   requestAnimationFrame(() => engine.resize());
 }
+
+/** Site-wide parallax — each [data-speed] drifts at its own rate */
+function initParallax() {
+  if (reduceMotion) return;
+
+  document.querySelectorAll("[data-plx]").forEach((section) => {
+    const layers = section.querySelectorAll("[data-speed]");
+    layers.forEach((el) => {
+      const speed = parseFloat(el.dataset.speed || "0.5");
+      const travel = (1 - speed) * 140;
+      gsap.fromTo(
+        el,
+        { y: -travel * 0.45 },
+        {
+          y: travel * 0.55,
+          ease: "none",
+          scrollTrigger: {
+            trigger: section,
+            start: "top bottom",
+            end: "bottom top",
+            scrub: true,
+          },
+        }
+      );
+    });
+  });
+}
+
+initParallax();
 
 gsap.from(".hero-copy > *", {
   y: 32,
@@ -62,6 +91,32 @@ gsap.from(".hero-copy > *", {
   delay: 0.15,
 });
 
+gsap.from(".strip h2", {
+  y: 28,
+  opacity: 0,
+  duration: 1,
+  ease: "power3.out",
+  scrollTrigger: { trigger: ".strip", start: "top 70%" },
+});
+
+gsap.from(".materials-inner > *", {
+  y: 36,
+  opacity: 0,
+  stagger: 0.1,
+  duration: 0.95,
+  ease: "power3.out",
+  scrollTrigger: { trigger: "#materials", start: "top 72%" },
+});
+
+gsap.from(".nights-inner > *, .night-list li", {
+  y: 32,
+  opacity: 0,
+  stagger: 0.08,
+  duration: 0.9,
+  ease: "power3.out",
+  scrollTrigger: { trigger: "#nights", start: "top 72%" },
+});
+
 gsap.from(".exp-rows article", {
   y: 40,
   opacity: 0,
@@ -69,14 +124,6 @@ gsap.from(".exp-rows article", {
   duration: 0.9,
   ease: "power3.out",
   scrollTrigger: { trigger: ".exp-rows", start: "top 80%" },
-});
-
-gsap.from(".strip h2", {
-  y: 28,
-  opacity: 0,
-  duration: 1,
-  ease: "power3.out",
-  scrollTrigger: { trigger: ".strip", start: "top 70%" },
 });
 
 gsap.from(".book-card", {
