@@ -665,49 +665,48 @@ function buildHatchet() {
   eye.castShadow = true;
   g.add(eye);
 
-  // —— Bearded throwing-axe blade in +X (classic hatchet, NOT a shovel) ——
-  // Wide curved bit, deep beard, thin profile
+  // —— Classic hatchet blade (+X): short, wide bit + beard ——
+  // Looks like an axe from the side, not a shovel/spade
   const bladeShape = new THREE.Shape();
-  bladeShape.moveTo(0.02, 0.16); // top of cheek
-  bladeShape.lineTo(0.38, 0.22); // toe
-  bladeShape.quadraticCurveTo(0.7, 0.12, 0.78, -0.02); // curved cutting edge
-  bladeShape.quadraticCurveTo(0.7, -0.18, 0.42, -0.32); // beard curve
-  bladeShape.lineTo(0.12, -0.2); // heel back to eye
-  bladeShape.lineTo(0.02, -0.1);
+  // Start at eye / cheek
+  bladeShape.moveTo(0.0, 0.14);
+  bladeShape.lineTo(0.22, 0.2); // top of bit
+  bladeShape.lineTo(0.48, 0.16); // toe
+  // Curved cutting edge (the bit)
+  bladeShape.quadraticCurveTo(0.62, 0.02, 0.55, -0.14);
+  // Beard hooks down then back
+  bladeShape.quadraticCurveTo(0.4, -0.28, 0.18, -0.22);
+  bladeShape.lineTo(0.0, -0.1);
   bladeShape.closePath();
 
   const blade = new THREE.Mesh(
     new THREE.ExtrudeGeometry(bladeShape, {
-      depth: 0.038,
+      depth: 0.055,
       bevelEnabled: true,
-      bevelThickness: 0.006,
-      bevelSize: 0.006,
-      bevelSegments: 2,
+      bevelThickness: 0.01,
+      bevelSize: 0.008,
+      bevelSegments: 3,
     }),
     steel
   );
-  blade.position.set(0.1, 0.48, -0.019);
+  blade.position.set(0.08, 0.48, -0.028);
   blade.castShadow = true;
   g.add(blade);
 
-  // Sharper edge highlight (thin bright lip on +X)
-  const edge = new THREE.Mesh(
-    new THREE.BoxGeometry(0.02, 0.35, 0.01),
-    new THREE.MeshStandardMaterial({
-      color: 0xffffff,
-      metalness: 1,
-      roughness: 0.12,
-      emissive: 0x888899,
-      emissiveIntensity: 0.25,
-    })
+  // Secondary cheek so head reads as axe mass, not a flat scoop
+  const cheekL = new THREE.Mesh(
+    new THREE.BoxGeometry(0.28, 0.2, 0.02),
+    steelDark
   );
-  edge.position.set(0.86, 0.48, 0);
-  edge.rotation.z = -0.15;
-  g.add(edge);
+  cheekL.position.set(0.2, 0.5, 0.04);
+  g.add(cheekL);
+  const cheekR = cheekL.clone();
+  cheekR.position.z = -0.04;
+  g.add(cheekR);
 
-  // —— Poll (hammer back, −X) ——
-  const poll = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.22, 0.16), steelDark);
-  poll.position.set(-0.14, 0.5, 0);
+  // —— Poll (hammer face on −X) ——
+  const poll = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.2, 0.15), steelDark);
+  poll.position.set(-0.12, 0.5, 0);
   poll.castShadow = true;
   g.add(poll);
 
