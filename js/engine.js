@@ -181,12 +181,12 @@ export function createThrowEngine(canvas) {
       throwFade(1);
     } else {
       const k = (t - 0.9) / 0.1;
-      // Slight side angle so stuck axe (handle out) reads clearly
-      yaw = THREE.MathUtils.lerp(-0.18, 0.55, easeOut(k));
-      pitch = THREE.MathUtils.lerp(0.02, 0.12, k);
-      radius = THREE.MathUtils.lerp(2.85, 2.7, easeOut(k));
-      lookY = 1.55;
-      fov = THREE.MathUtils.lerp(31, 34, k);
+      // Wide side angle — clear read of handle sticking OUT of the board
+      yaw = THREE.MathUtils.lerp(-0.18, 0.95, easeOut(k));
+      pitch = THREE.MathUtils.lerp(0.02, 0.18, k);
+      radius = THREE.MathUtils.lerp(2.85, 3.1, easeOut(k));
+      lookY = 1.35;
+      fov = THREE.MathUtils.lerp(31, 36, k);
       axe.visible = true;
       axePhase = "impact";
       axeK = k;
