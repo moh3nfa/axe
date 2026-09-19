@@ -319,20 +319,20 @@ export function createThrowEngine(canvas) {
   }
 
   /**
-   * Real throw tumble: rotate around world X (end-over-end) so the blade
-   * swings in the YZ plane toward the target face (−Z). No drill/yaw spin.
-   * Local +X = blade; after a −90° yaw it lies in YZ and X-pitch flips it in.
+   * Flight orientation: blade (+X) ALWAYS aims at the bullseye.
+   * Roll only around the flight axis (handle twirls) — never tumble on
+   * world X, which pulled the bit away from the target.
    */
-  function orientAxeTowardTarget(spin) {
-    const qFace = new THREE.Quaternion().setFromAxisAngle(
-      new THREE.Vector3(0, 1, 0),
-      -Math.PI / 2
-    );
-    const qSpin = new THREE.Quaternion().setFromAxisAngle(
+  function orientAxeTowardTarget(roll) {
+    const toTarget = BULL.clone().sub(axe.position).normalize();
+    if (toTarget.lengthSq() < 1e-8) toTarget.set(0, 0, -1);
+
+    const qLead = new THREE.Quaternion().setFromUnitVectors(
       new THREE.Vector3(1, 0, 0),
-      spin
+      toTarget
     );
-    axe.quaternion.copy(qSpin).multiply(qFace);
+    const qRoll = new THREE.Quaternion().setFromAxisAngle(toTarget, roll);
+    axe.quaternion.copy(qRoll).multiply(qLead);
   }
 
   function placeAxe(k, phase) {
@@ -351,10 +351,10 @@ export function createThrowEngine(canvas) {
         pos.z = Math.max(pos.z, WALL_Z + 0.85);
         axe.position.copy(pos);
 
-        // Keep tumbling on X into the board (θ → 2πn), then settle to stuck pose
-        orientAxeTowardTarget(Math.PI * 4.05 + ease * 0.2);
+        // Blade still locked on the bull; ease into stuck twist
+        orientAxeTowardTarget(0.15);
         const airQ = axe.quaternion.clone();
-        axe.quaternion.slerpQuaternions(airQ, endQ, ease * ease);
+        axe.quaternion.slerpQuaternions(airQ, endQ, ease);
         axe.scale.setScalar(THREE.MathUtils.lerp(1.15, stuckScale, ease));
         keepWoodOutside();
       } else {
@@ -364,11 +364,14 @@ export function createThrowEngine(canvas) {
           endPos,
           ease
         );
-        orientAxeTowardTarget(Math.PI * 4.1);
-        const airQ = axe.quaternion.clone();
-        axe.quaternion.slerpQuaternions(airQ, endQ, ease);
-        if (ease > 0.45) applyStuckPose(0.06 + (ease - 0.45) * 0.05);
-        else keepWoodOutside();
+        if (ease < 0.35) {
+          orientAxeTowardTarget(0.05);
+          const airQ = axe.quaternion.clone();
+          axe.quaternion.slerpQuaternions(airQ, endQ, ease / 0.35);
+          keepWoodOutside();
+        } else {
+          applyStuckPose(0.06 + (ease - 0.35) * 0.05);
+        }
         axe.scale.setScalar(stuckScale);
       }
       axe.visible = true;
@@ -376,29 +379,27 @@ export function createThrowEngine(canvas) {
     }
 
     // Camera-space windup / release / flight — always clamp in front of wall
-    let lx, ly, lz, spin, s;
+    let lx, ly, lz, roll, s;
     if (phase === "windup") {
       lx = THREE.MathUtils.lerp(-0.9, -1.15, k);
       ly = THREE.MathUtils.lerp(-0.05, -0.25, k);
       lz = THREE.MathUtils.lerp(-2.2, -2.45, k);
-      // Blade cocked UP (θ≈+π/2) — ready to flip forward into the board
-      spin = THREE.MathUtils.lerp(0.85, 1.25, k);
+      roll = THREE.MathUtils.lerp(0.2, 0.55, k);
       s = THREE.MathUtils.lerp(1.25, 1.4, k);
     } else if (phase === "release") {
       const u = k;
       lx = THREE.MathUtils.lerp(-1.1, 0.1, u);
       ly = THREE.MathUtils.lerp(-0.2, 0.35, Math.sin(u * Math.PI));
       lz = THREE.MathUtils.lerp(-2.4, -2.9, u);
-      // Flip on +X: up → toward camera → down → into wall (−Z)
-      spin = THREE.MathUtils.lerp(1.25, Math.PI * 2.05, u);
+      // Handle rolls around the throw line; blade stays on the bull
+      roll = THREE.MathUtils.lerp(0.55, Math.PI * 2.1, u);
       s = THREE.MathUtils.lerp(1.4, 1.25, u);
     } else {
       const u = k;
       lx = THREE.MathUtils.lerp(0.1, 0.02, u);
       ly = THREE.MathUtils.lerp(0.3, 0.1, u);
       lz = THREE.MathUtils.lerp(-2.9, -3.3, u);
-      // One more full end-over-end toward the target, land blade-into-wall
-      spin = Math.PI * 2.05 + u * Math.PI * 2.0;
+      roll = Math.PI * 2.1 + u * Math.PI * 2.0;
       s = THREE.MathUtils.lerp(1.25, 1.1, u);
     }
 
@@ -408,7 +409,7 @@ export function createThrowEngine(canvas) {
     axe.position.copy(local);
     axe.scale.setScalar(s);
 
-    orientAxeTowardTarget(spin);
+    orientAxeTowardTarget(roll);
     keepWoodOutside(0.55);
   }
 
