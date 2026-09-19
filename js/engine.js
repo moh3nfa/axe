@@ -318,6 +318,23 @@ export function createThrowEngine(canvas) {
     if (push > 0) axe.position.z += push;
   }
 
+  /**
+   * Real throw tumble: rotate around world X (end-over-end) so the blade
+   * swings in the YZ plane toward the target face (−Z). No drill/yaw spin.
+   * Local +X = blade; after a −90° yaw it lies in YZ and X-pitch flips it in.
+   */
+  function orientAxeTowardTarget(spin) {
+    const qFace = new THREE.Quaternion().setFromAxisAngle(
+      new THREE.Vector3(0, 1, 0),
+      -Math.PI / 2
+    );
+    const qSpin = new THREE.Quaternion().setFromAxisAngle(
+      new THREE.Vector3(1, 0, 0),
+      spin
+    );
+    axe.quaternion.copy(qSpin).multiply(qFace);
+  }
+
   function placeAxe(k, phase) {
     if (phase === "approach" || phase === "impact") {
       // World-space arc that stays IN FRONT of the wall until the bite
@@ -329,32 +346,28 @@ export function createThrowEngine(canvas) {
 
       if (phase === "approach") {
         const ease = easeInOut(k);
-        // Position along bezier in front of wall
-        const u = ease * 0.92; // never reach full embed during approach
+        const u = ease * 0.92;
         const pos = new THREE.Vector3().copy(start).lerp(mid, u);
-        // Keep Z strictly in front
         pos.z = Math.max(pos.z, WALL_Z + 0.85);
         axe.position.copy(pos);
 
-        const airQ = new THREE.Quaternion().setFromEuler(
-          new THREE.Euler(0.3, 0.8 + k * Math.PI * 1.6, -0.4, "XYZ")
-        );
-        axe.quaternion.slerpQuaternions(airQ, endQ, ease);
+        // Keep tumbling on X into the board (θ → 2πn), then settle to stuck pose
+        orientAxeTowardTarget(Math.PI * 4.05 + ease * 0.2);
+        const airQ = axe.quaternion.clone();
+        axe.quaternion.slerpQuaternions(airQ, endQ, ease * ease);
         axe.scale.setScalar(THREE.MathUtils.lerp(1.15, stuckScale, ease));
         keepWoodOutside();
       } else {
-        // Impact: settle into stuck pose
         const ease = easeOut(k);
         axe.position.lerpVectors(
           new THREE.Vector3(BULL.x + 0.1, BULL.y + 0.2, WALL_Z + 0.9),
           endPos,
           ease
         );
-        const airQ = new THREE.Quaternion().setFromEuler(
-          new THREE.Euler(0.2, 0.3, -0.2, "XYZ")
-        );
+        orientAxeTowardTarget(Math.PI * 4.1);
+        const airQ = axe.quaternion.clone();
         axe.quaternion.slerpQuaternions(airQ, endQ, ease);
-        if (ease > 0.55) applyStuckPose(0.06 + (ease - 0.55) * 0.06);
+        if (ease > 0.45) applyStuckPose(0.06 + (ease - 0.45) * 0.05);
         else keepWoodOutside();
         axe.scale.setScalar(stuckScale);
       }
@@ -363,56 +376,39 @@ export function createThrowEngine(canvas) {
     }
 
     // Camera-space windup / release / flight — always clamp in front of wall
-    let lx, ly, lz, spin, tumbleY, tumbleX, s;
+    let lx, ly, lz, spin, s;
     if (phase === "windup") {
       lx = THREE.MathUtils.lerp(-0.9, -1.15, k);
       ly = THREE.MathUtils.lerp(-0.05, -0.25, k);
       lz = THREE.MathUtils.lerp(-2.2, -2.45, k);
-      spin = THREE.MathUtils.lerp(-0.3, -0.9, k);
-      tumbleY = THREE.MathUtils.lerp(0.4, 0.9, k);
-      tumbleX = THREE.MathUtils.lerp(0.1, 0.35, k);
+      // Blade cocked UP (θ≈+π/2) — ready to flip forward into the board
+      spin = THREE.MathUtils.lerp(0.85, 1.25, k);
       s = THREE.MathUtils.lerp(1.25, 1.4, k);
     } else if (phase === "release") {
       const u = k;
       lx = THREE.MathUtils.lerp(-1.1, 0.1, u);
       ly = THREE.MathUtils.lerp(-0.2, 0.35, Math.sin(u * Math.PI));
       lz = THREE.MathUtils.lerp(-2.4, -2.9, u);
-      spin = THREE.MathUtils.lerp(-0.9, Math.PI * 2.0, u);
-      tumbleY = THREE.MathUtils.lerp(0.9, -0.8, u);
-      tumbleX = THREE.MathUtils.lerp(0.35, 0.7, u);
+      // Flip on +X: up → toward camera → down → into wall (−Z)
+      spin = THREE.MathUtils.lerp(1.25, Math.PI * 2.05, u);
       s = THREE.MathUtils.lerp(1.4, 1.25, u);
     } else {
       const u = k;
       lx = THREE.MathUtils.lerp(0.1, 0.02, u);
       ly = THREE.MathUtils.lerp(0.3, 0.1, u);
       lz = THREE.MathUtils.lerp(-2.9, -3.3, u);
-      spin = Math.PI * 2.0 + u * Math.PI * 2.2;
-      tumbleY = THREE.MathUtils.lerp(-0.8, 0.5, u);
-      tumbleX = THREE.MathUtils.lerp(0.7, 0.35, u);
+      // One more full end-over-end toward the target, land blade-into-wall
+      spin = Math.PI * 2.05 + u * Math.PI * 2.0;
       s = THREE.MathUtils.lerp(1.25, 1.1, u);
     }
 
     const local = new THREE.Vector3(lx, ly, lz);
     local.applyMatrix4(camera.matrixWorld);
-    // Keep center of mass well in front of the board during flight
     local.z = Math.max(local.z, WALL_Z + 1.15);
     axe.position.copy(local);
     axe.scale.setScalar(s);
 
-    // Orient: BLADE (+X) leads toward the bullseye — never handle-first
-    const toTarget = BULL.clone().sub(axe.position).normalize();
-    const qLead = new THREE.Quaternion().setFromUnitVectors(
-      new THREE.Vector3(1, 0, 0),
-      toTarget
-    );
-    // Spin around the flight axis (blade direction)
-    const qSpin = new THREE.Quaternion().setFromAxisAngle(toTarget, spin);
-    axe.quaternion.copy(qSpin).multiply(qLead);
-    // Slight tumble for drama
-    axe.rotateY(tumbleY * 0.35);
-    axe.rotateZ(tumbleX * 0.25);
-
-    // During flight keep the whole axe clearly in front of the board
+    orientAxeTowardTarget(spin);
     keepWoodOutside(0.55);
   }
 
