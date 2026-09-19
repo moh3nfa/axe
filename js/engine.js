@@ -230,9 +230,9 @@ export function createThrowEngine(canvas) {
   const BLADE_TIP_LOCAL = new THREE.Vector3(0.0, 0.95, 0);
   const INTO_WALL = new THREE.Vector3(0, 0, -1);
 
-  function applyStuckPose(bite = 0.06, twist = 0.4) {
-    // Handle out+down toward thrower; only steel tip seats in wood
-    const outDir = new THREE.Vector3(0.45, -0.5, 0.75).normalize();
+  function applyStuckPose(bite = 0.05, twist = 0.15) {
+    // Near-profile stuck: handle swings out to the side+down, tip kisses wood
+    const outDir = new THREE.Vector3(0.82, -0.4, 0.4).normalize();
     const intoDir = outDir.clone().negate();
     const q = new THREE.Quaternion().setFromUnitVectors(
       new THREE.Vector3(0, 1, 0),
@@ -244,18 +244,24 @@ export function createThrowEngine(canvas) {
     const tip = BLADE_TIP_LOCAL.clone().applyQuaternion(axe.quaternion);
     const tipWorld = new THREE.Vector3(BULL.x, BULL.y, BULL.z - bite);
     axe.position.copy(tipWorld).sub(tip);
-    axe.scale.setScalar(1.05);
 
-    // Keep the metal collar / eye clearly OUTSIDE the board face
+    // Pull whole axe out along board normal until eye is clearly proud
     const eyeNow = EYE_LOCAL.clone().applyQuaternion(axe.quaternion).add(axe.position);
-    const minEyeZ = BULL.z + 0.22;
+    const minEyeZ = BULL.z + 0.35;
     if (eyeNow.z < minEyeZ) {
       axe.position.z += minEyeZ - eyeNow.z;
     }
-    const grip = new THREE.Vector3(0, -1.15, 0).applyQuaternion(axe.quaternion).add(axe.position);
-    if (grip.z < BULL.z + 0.55) {
-      axe.position.z += BULL.z + 0.7 - grip.z;
+    // Re-seat tip depth after the pull (only steel may go back in)
+    const tipNow = BLADE_TIP_LOCAL.clone().applyQuaternion(axe.quaternion).add(axe.position);
+    if (tipNow.z > BULL.z - 0.02) {
+      axe.position.z -= tipNow.z - (BULL.z - bite);
     }
+    // Final eye check wins over tip if conflict — never bury wood
+    const eye2 = EYE_LOCAL.clone().applyQuaternion(axe.quaternion).add(axe.position);
+    if (eye2.z < minEyeZ) {
+      axe.position.z += minEyeZ - eye2.z;
+    }
+    axe.scale.setScalar(stuckScale);
   }
 
   const stuckScale = 1.05;
