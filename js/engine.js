@@ -230,29 +230,38 @@ export function createThrowEngine(canvas) {
   const BLADE_TIP_LOCAL = new THREE.Vector3(0.02, 1.15, 0); // tip of blade along +Y
   const INTO_WALL = new THREE.Vector3(0, 0, -1);
 
-  function applyStuckPose(bite = 0.08, twist = 0.95) {
-    // Orient: local +Y (blade tip / head) → into wall (−Z)
+  function applyStuckPose(bite = 0.1, twist = 0.35) {
+    // Classic stuck throw: tip into board, handle angled OUT + DOWN toward thrower
+    const outDir = new THREE.Vector3(0.35, -0.55, 0.75).normalize();
+    const intoDir = outDir.clone().negate();
     const q = new THREE.Quaternion().setFromUnitVectors(
       new THREE.Vector3(0, 1, 0),
-      INTO_WALL
+      intoDir
     );
-    const qTwist = new THREE.Quaternion().setFromAxisAngle(INTO_WALL, twist);
+    const qTwist = new THREE.Quaternion().setFromAxisAngle(intoDir, twist);
     axe.quaternion.copy(qTwist).multiply(q);
 
-    // Put blade tip into the bullseye; eye stays on the camera side of the face
     const tip = BLADE_TIP_LOCAL.clone().applyQuaternion(axe.quaternion);
-    const tipWorld = BULL.clone().addScaledVector(INTO_WALL, bite);
+    const tipWorld = BULL.clone().addScaledVector(intoDir, bite);
+    // Keep tip near bullseye on the face plane
+    tipWorld.x = BULL.x;
+    tipWorld.y = BULL.y;
+    tipWorld.z = BULL.z - bite;
     axe.position.copy(tipWorld).sub(tip);
     axe.scale.setScalar(stuckScale);
 
-    // Hard clamp: wooden eye must stay in front of the board
+    // Clamp: eye + grip must stay in front of the board
     const eyeNow = EYE_LOCAL.clone().applyQuaternion(axe.quaternion).add(axe.position);
-    if (eyeNow.z < BULL.z + 0.08) {
-      axe.position.z += BULL.z + 0.12 - eyeNow.z;
+    if (eyeNow.z < BULL.z + 0.12) {
+      axe.position.z += BULL.z + 0.18 - eyeNow.z;
     }
     const grip = new THREE.Vector3(0, -1.2, 0).applyQuaternion(axe.quaternion).add(axe.position);
-    if (grip.z < BULL.z + 0.6) {
-      axe.position.z += BULL.z + 0.75 - grip.z;
+    if (grip.z < BULL.z + 0.5) {
+      axe.position.z += BULL.z + 0.65 - grip.z;
+    }
+    // Also pull grip down into frame if it flew too high
+    if (grip.y > 2.4) {
+      axe.position.y -= grip.y - 2.2;
     }
   }
 
@@ -268,14 +277,14 @@ export function createThrowEngine(canvas) {
           new THREE.Euler(-0.4, 0.6, Math.PI * 3.6, "XYZ")
         );
         // End: stuck pose (compute into temps)
-        applyStuckPose(0.02, 0.85);
+        applyStuckPose(0.08, 0.35);
         const endPos = axe.position.clone();
         const endQ = axe.quaternion.clone();
         axe.position.lerpVectors(airPos, endPos, ease);
         axe.quaternion.slerpQuaternions(airQ, endQ, ease);
         axe.scale.setScalar(THREE.MathUtils.lerp(1.1, stuckScale, ease));
       } else {
-        applyStuckPose(0.05 + easeOut(k) * 0.03, 0.85);
+        applyStuckPose(0.1 + easeOut(k) * 0.04, 0.35);
       }
       axe.visible = true;
       return;
