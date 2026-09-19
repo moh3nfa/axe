@@ -279,15 +279,19 @@ export function createThrowEngine(canvas) {
     keepWoodOutside();
   }
 
-  function keepWoodOutside() {
+  function keepWoodOutside(minTipClearance = null) {
     axe.updateMatrixWorld(true);
     const eyeW = EYE.clone().applyMatrix4(axe.matrixWorld);
     const gripW = GRIP.clone().applyMatrix4(axe.matrixWorld);
+    const tipW = BLADE_TIP.clone().applyMatrix4(axe.matrixWorld);
     const minEyeZ = WALL_Z + 0.28;
     const minGripZ = WALL_Z + 0.55;
     let push = 0;
     if (eyeW.z < minEyeZ) push = Math.max(push, minEyeZ - eyeW.z);
     if (gripW.z < minGripZ) push = Math.max(push, minGripZ - gripW.z);
+    if (minTipClearance != null && tipW.z < WALL_Z + minTipClearance) {
+      push = Math.max(push, WALL_Z + minTipClearance - tipW.z);
+    }
     if (push > 0) axe.position.z += push;
   }
 
@@ -385,7 +389,8 @@ export function createThrowEngine(canvas) {
     axe.rotateY(tumbleY * 0.35);
     axe.rotateZ(tumbleX * 0.25);
 
-    keepWoodOutside();
+    // During flight keep the whole axe clearly in front of the board
+    keepWoodOutside(0.55);
   }
 
   let heroOpacity = 1;
