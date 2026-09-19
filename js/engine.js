@@ -226,13 +226,13 @@ export function createThrowEngine(canvas) {
    * Stuck pose helpers — map local head (+Y) into the wall (-Z),
    * keep the handle (−Y) on the camera side of the board face.
    */
-  const EYE_LOCAL = new THREE.Vector3(0, 0.28, 0); // handle/head junction — stays OUTSIDE wood
-  const BLADE_TIP_LOCAL = new THREE.Vector3(0.02, 1.15, 0); // tip of blade along +Y
+  const EYE_LOCAL = new THREE.Vector3(0, 0.22, 0);
+  const BLADE_TIP_LOCAL = new THREE.Vector3(0.0, 0.95, 0);
   const INTO_WALL = new THREE.Vector3(0, 0, -1);
 
-  function applyStuckPose(bite = 0.1, twist = 0.35) {
-    // Classic stuck throw: tip into board, handle angled OUT + DOWN toward thrower
-    const outDir = new THREE.Vector3(0.35, -0.55, 0.75).normalize();
+  function applyStuckPose(bite = 0.06, twist = 0.4) {
+    // Handle out+down toward thrower; only steel tip seats in wood
+    const outDir = new THREE.Vector3(0.45, -0.5, 0.75).normalize();
     const intoDir = outDir.clone().negate();
     const q = new THREE.Quaternion().setFromUnitVectors(
       new THREE.Vector3(0, 1, 0),
@@ -242,30 +242,23 @@ export function createThrowEngine(canvas) {
     axe.quaternion.copy(qTwist).multiply(q);
 
     const tip = BLADE_TIP_LOCAL.clone().applyQuaternion(axe.quaternion);
-    const tipWorld = BULL.clone().addScaledVector(intoDir, bite);
-    // Keep tip near bullseye on the face plane
-    tipWorld.x = BULL.x;
-    tipWorld.y = BULL.y;
-    tipWorld.z = BULL.z - bite;
+    const tipWorld = new THREE.Vector3(BULL.x, BULL.y, BULL.z - bite);
     axe.position.copy(tipWorld).sub(tip);
-    axe.scale.setScalar(stuckScale);
+    axe.scale.setScalar(1.05);
 
-    // Clamp: eye + grip must stay in front of the board
+    // Keep the metal collar / eye clearly OUTSIDE the board face
     const eyeNow = EYE_LOCAL.clone().applyQuaternion(axe.quaternion).add(axe.position);
-    if (eyeNow.z < BULL.z + 0.12) {
-      axe.position.z += BULL.z + 0.18 - eyeNow.z;
+    const minEyeZ = BULL.z + 0.22;
+    if (eyeNow.z < minEyeZ) {
+      axe.position.z += minEyeZ - eyeNow.z;
     }
-    const grip = new THREE.Vector3(0, -1.2, 0).applyQuaternion(axe.quaternion).add(axe.position);
-    if (grip.z < BULL.z + 0.5) {
-      axe.position.z += BULL.z + 0.65 - grip.z;
-    }
-    // Also pull grip down into frame if it flew too high
-    if (grip.y > 2.4) {
-      axe.position.y -= grip.y - 2.2;
+    const grip = new THREE.Vector3(0, -1.15, 0).applyQuaternion(axe.quaternion).add(axe.position);
+    if (grip.z < BULL.z + 0.55) {
+      axe.position.z += BULL.z + 0.7 - grip.z;
     }
   }
 
-  const stuckScale = 0.95;
+  const stuckScale = 1.05;
 
   function placeAxe(k, phase) {
     if (phase === "approach" || phase === "impact") {
@@ -277,14 +270,14 @@ export function createThrowEngine(canvas) {
           new THREE.Euler(-0.4, 0.6, Math.PI * 3.6, "XYZ")
         );
         // End: stuck pose (compute into temps)
-        applyStuckPose(0.08, 0.35);
+        applyStuckPose(0.05, 0.4);
         const endPos = axe.position.clone();
         const endQ = axe.quaternion.clone();
         axe.position.lerpVectors(airPos, endPos, ease);
         axe.quaternion.slerpQuaternions(airQ, endQ, ease);
-        axe.scale.setScalar(THREE.MathUtils.lerp(1.1, stuckScale, ease));
+        axe.scale.setScalar(THREE.MathUtils.lerp(1.15, stuckScale, ease));
       } else {
-        applyStuckPose(0.1 + easeOut(k) * 0.04, 0.35);
+        applyStuckPose(0.06 + easeOut(k) * 0.03, 0.4);
       }
       axe.visible = true;
       return;
@@ -386,9 +379,9 @@ export function createThrowEngine(canvas) {
     debug() {
       axe.updateMatrixWorld(true);
       const v = axe.position.clone().project(camera);
-      const tip = new THREE.Vector3(0.02, 1.15, 0).applyMatrix4(axe.matrixWorld);
-      const grip = new THREE.Vector3(0, -1.2, 0).applyMatrix4(axe.matrixWorld);
-      const eye = new THREE.Vector3(0, 0.28, 0).applyMatrix4(axe.matrixWorld);
+      const tip = new THREE.Vector3(0.0, 0.95, 0).applyMatrix4(axe.matrixWorld);
+      const grip = new THREE.Vector3(0, -1.15, 0).applyMatrix4(axe.matrixWorld);
+      const eye = new THREE.Vector3(0, 0.22, 0).applyMatrix4(axe.matrixWorld);
       return {
         progress: state.progress,
         visible: axe.visible,
@@ -540,16 +533,18 @@ function buildAxe() {
     metalness: 0.06,
   });
   const steel = new THREE.MeshStandardMaterial({
-    color: 0xd8dee8,
-    roughness: 0.22,
-    metalness: 0.96,
-    emissive: 0x223344,
-    emissiveIntensity: 0.18,
+    color: 0xf2f5fa,
+    roughness: 0.18,
+    metalness: 1.0,
+    emissive: 0x445566,
+    emissiveIntensity: 0.35,
   });
   const steelDark = new THREE.MeshStandardMaterial({
-    color: 0x6e7888,
-    roughness: 0.32,
-    metalness: 0.92,
+    color: 0x8a94a4,
+    roughness: 0.28,
+    metalness: 0.95,
+    emissive: 0x222833,
+    emissiveIntensity: 0.2,
   });
   const lacquer = new THREE.MeshStandardMaterial({
     color: 0x8b1a12,
@@ -584,46 +579,46 @@ function buildAxe() {
   grip.castShadow = true;
   g.add(grip);
 
-  // Steel collar where handle meets head (still in front of wood)
+  // Steel collar — fat and bright so impact reads as metal-in-wood
   const collar = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.06, 0.07, 0.12, 16),
-    steelDark
+    new THREE.CylinderGeometry(0.08, 0.09, 0.16, 20),
+    steel
   );
-  collar.position.y = 0.22;
+  collar.position.y = 0.18;
+  collar.castShadow = true;
   g.add(collar);
 
-  // Head / eye
-  const head = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.28, 0.18), steelDark);
-  head.position.set(0, 0.42, 0);
+  // Head block
+  const head = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.36, 0.22), steelDark);
+  head.position.set(0.04, 0.42, 0);
   head.castShadow = true;
   g.add(head);
 
-  // Blade extends in +Y (toward tip) so when head tips into the wall, steel leads
+  // Big bearded blade extending +Y into the tip
   const bladeShape = new THREE.Shape();
-  bladeShape.moveTo(-0.02, 0);
-  bladeShape.lineTo(0.2, 0.08);
-  bladeShape.lineTo(0.22, 0.45);
-  bladeShape.lineTo(0.0, 0.72);
-  bladeShape.lineTo(-0.18, 0.4);
-  bladeShape.lineTo(-0.12, 0.05);
+  bladeShape.moveTo(-0.05, 0);
+  bladeShape.lineTo(0.28, 0.1);
+  bladeShape.lineTo(0.32, 0.4);
+  bladeShape.lineTo(0.05, 0.7);
+  bladeShape.lineTo(-0.22, 0.38);
+  bladeShape.lineTo(-0.16, 0.06);
   bladeShape.closePath();
   const blade = new THREE.Mesh(
     new THREE.ExtrudeGeometry(bladeShape, {
-      depth: 0.05,
+      depth: 0.06,
       bevelEnabled: true,
-      bevelThickness: 0.008,
-      bevelSize: 0.008,
-      bevelSegments: 2,
+      bevelThickness: 0.012,
+      bevelSize: 0.01,
+      bevelSegments: 3,
     }),
     steel
   );
-  blade.position.set(0.02, 0.48, -0.025);
+  blade.position.set(0.0, 0.4, -0.03);
   blade.castShadow = true;
   g.add(blade);
 
-  // Poll opposite the beard
-  const poll = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.18, 0.16), steelDark);
-  poll.position.set(-0.02, 0.38, 0);
+  const poll = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.22, 0.2), steelDark);
+  poll.position.set(-0.08, 0.4, 0);
   g.add(poll);
 
   return g;
