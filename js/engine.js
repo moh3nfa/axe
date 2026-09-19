@@ -104,8 +104,8 @@ export function createThrowEngine(canvas) {
     opacity: 0,
     depthWrite: false,
   });
-  const flash = new THREE.Mesh(new THREE.CircleGeometry(0.45, 32), flashMat);
-  flash.position.copy(BULL).add(new THREE.Vector3(0, 0, 0.1));
+  const flash = new THREE.Mesh(new THREE.CircleGeometry(0.28, 32), flashMat);
+  flash.position.copy(BULL).add(new THREE.Vector3(0, 0, 0.12));
   scene.add(flash);
 
   const chips = buildChips();
@@ -114,7 +114,7 @@ export function createThrowEngine(canvas) {
   scene.add(chips);
 
   const state = { progress: 0 };
-  const stuckScale = 1.0;
+  const stuckScale = 1.08;
 
   // Local landmarks on the hatchet group
   // Handle along +Y (head) / −Y (grip). Blade tip at +X.
@@ -191,39 +191,49 @@ export function createThrowEngine(canvas) {
       throwFade(1);
     } else if (t < 0.9) {
       const k = (t - 0.75) / 0.15;
-      yaw = THREE.MathUtils.lerp(-0.85, 0.15, easeInOut(k));
-      pitch = THREE.MathUtils.lerp(-0.06, 0.1, k);
-      radius = THREE.MathUtils.lerp(3.6, 3.0, k);
-      lookY = 1.5;
-      fov = THREE.MathUtils.lerp(34, 33, k);
+      // Drift toward a 3/4 impact angle while still flying in
+      yaw = THREE.MathUtils.lerp(-0.85, 0.42, easeInOut(k));
+      pitch = THREE.MathUtils.lerp(-0.06, 0.02, k);
+      radius = THREE.MathUtils.lerp(3.6, 2.55, easeInOut(k));
+      lookY = THREE.MathUtils.lerp(1.5, 1.52, k);
+      fov = THREE.MathUtils.lerp(34, 31, k);
       axe.visible = true;
       axePhase = "approach";
       axeK = k;
       heroFade(0);
       throwFade(1);
+      flash.material.opacity = 0;
+      chips.visible = false;
     } else {
       const k = (t - 0.9) / 0.1;
-      // Side-ish view so handle at clock 1:30 reads clearly
-      yaw = THREE.MathUtils.lerp(0.15, 0.55, easeOut(k));
-      pitch = THREE.MathUtils.lerp(0.1, 0.14, k);
-      radius = THREE.MathUtils.lerp(3.0, 2.85, easeOut(k));
-      lookY = 1.45;
-      fov = THREE.MathUtils.lerp(33, 34, k);
+      // Tight hero shot — fill the frame with the buried bit
+      yaw = THREE.MathUtils.lerp(0.42, 0.95, easeOut(k));
+      pitch = THREE.MathUtils.lerp(0.02, 0.08, k);
+      radius = THREE.MathUtils.lerp(2.55, 1.45, easeOut(k));
+      lookY = 1.48;
+      fov = THREE.MathUtils.lerp(31, 24, k);
       axe.visible = true;
       axePhase = "impact";
       axeK = k;
       heroFade(0);
       throwFade(1);
-      flash.material.opacity = Math.sin(Math.min(k, 1) * Math.PI) * 0.75;
-      chips.visible = k > 0.12;
-      chips.scale.setScalar(0.5 + k * 0.7);
+      const hit = Math.min(1, k / 0.18);
+      flash.material.opacity = Math.sin(hit * Math.PI) * 0.35 * (1 - k * 0.85);
+      // Brief chip burst only at the hit instant — hide after so pose stays clean
+      chips.visible = k > 0.03 && k < 0.28;
+      const burst = easeOut(Math.min(1, (k - 0.03) / 0.2));
+      chips.scale.setScalar(0.2 + burst * 0.55);
+      chips.rotation.z = 0;
     }
 
     const cx = Math.sin(yaw) * Math.cos(pitch) * radius;
     const cy = 1.15 + Math.sin(pitch) * radius * 0.85;
     const cz = Math.cos(yaw) * Math.cos(pitch) * radius;
     camera.position.set(cx, cy, cz);
-    camera.lookAt(BULL.x, lookY, 0);
+    // Frame the impact slightly toward the handle so the axe fills the shot
+    const lookZ = axePhase === "impact" ? 0.35 : 0;
+    const lookX = axePhase === "impact" ? BULL.x + 0.18 : BULL.x;
+    camera.lookAt(lookX, lookY, lookZ);
     camera.fov = fov;
     camera.updateProjectionMatrix();
     camera.updateMatrixWorld(true);
@@ -258,71 +268,59 @@ export function createThrowEngine(canvas) {
   }
 
   /**
-   * Stuck pose: blade (+X) bites into wall (−Z).
-   * Handle sticks OUT toward clock 1:30 (upper-right + toward camera).
-   * Wood never crosses the board face.
+   * Stuck pose — blade EDGE buried in bullseye, handle out toward camera
+   * (down-right) so a 3/4 view reads depth, not a flat sticker on the board.
    */
-  function applyStuckPose(bite = 0.08) {
-    // Handle out toward 1:30 on the face, strongly toward the thrower (+Z)
-    const face = clockDir(1.5); // (≈0.707, ≈0.707, 0)
-    const handleOut = new THREE.Vector3(face.x * 0.55, face.y * 0.55, 0.85).normalize();
+  function applyStuckPose(bite = 0.16) {
+    // Handle toward camera + right (readable 3/4), blade digs into board
+    const handleOut = new THREE.Vector3(0.55, -0.2, 0.82).normalize();
+    const bladeInto = new THREE.Vector3(0.02, -0.08, -1).normalize();
 
-    // 1) Point local −Y (grip direction from head) along handleOut
-    const q = new THREE.Quaternion().setFromUnitVectors(
-      new THREE.Vector3(0, -1, 0),
-      handleOut
-    );
+    const yAxis = handleOut.clone().negate();
+    let xAxis = bladeInto
+      .clone()
+      .sub(yAxis.clone().multiplyScalar(bladeInto.dot(yAxis)));
+    if (xAxis.lengthSq() < 1e-6) xAxis.set(0, 0, -1);
+    else xAxis.normalize();
+    const zAxis = new THREE.Vector3().crossVectors(xAxis, yAxis).normalize();
+    xAxis = new THREE.Vector3().crossVectors(yAxis, zAxis).normalize();
 
-    // 2) Twist around the handle so local +X (blade) faces into the wall
-    const bladeProbe = new THREE.Vector3(1, 0, 0).applyQuaternion(q);
-    const intoWall = new THREE.Vector3(0, 0, -1);
-    // Project desired intoWall onto plane ⊥ handleOut
-    const desired = intoWall.clone().sub(
-      handleOut.clone().multiplyScalar(intoWall.dot(handleOut))
-    );
-    if (desired.lengthSq() > 1e-6) {
-      desired.normalize();
-      const current = bladeProbe
-        .clone()
-        .sub(handleOut.clone().multiplyScalar(bladeProbe.dot(handleOut)))
-        .normalize();
-      const qTwist = new THREE.Quaternion().setFromUnitVectors(current, desired);
-      q.premultiply(qTwist);
-    }
+    const m = new THREE.Matrix4().makeBasis(xAxis, yAxis, zAxis);
+    axe.quaternion.setFromRotationMatrix(m);
 
-    axe.quaternion.copy(q);
-
-    // Place so blade tip seats just inside the face
     const tip = BLADE_TIP.clone().applyQuaternion(axe.quaternion);
-    const tipWorld = new THREE.Vector3(BULL.x, BULL.y, WALL_Z - bite);
-    axe.position.copy(tipWorld).sub(tip);
+    axe.position.set(BULL.x, BULL.y, WALL_Z - bite).sub(tip);
     axe.scale.setScalar(stuckScale);
 
-    // HARD RULE: eye (wood/steel junction) must stay in front of the board
-    keepWoodOutside();
+    // Only nudge along handle if eye clipped — never slide tip off bullseye
+    axe.updateMatrixWorld(true);
+    const eyeW = EYE.clone().applyMatrix4(axe.matrixWorld);
+    if (eyeW.z < WALL_Z + 0.08) {
+      const push = Math.min(0.06, WALL_Z + 0.08 - eyeW.z);
+      axe.position.addScaledVector(handleOut, push);
+    }
   }
 
-  function keepWoodOutside(minTipClearance = null) {
+  function keepWoodOutside(minTipClearance = null, soft = false) {
     axe.updateMatrixWorld(true);
     const eyeW = EYE.clone().applyMatrix4(axe.matrixWorld);
     const gripW = GRIP.clone().applyMatrix4(axe.matrixWorld);
     const tipW = BLADE_TIP.clone().applyMatrix4(axe.matrixWorld);
-    const minEyeZ = WALL_Z + 0.42;
-    const minGripZ = WALL_Z + 0.75;
+    const minEyeZ = soft ? WALL_Z + 0.1 : WALL_Z + 0.42;
+    const minGripZ = soft ? WALL_Z + 0.28 : WALL_Z + 0.75;
     let push = 0;
     if (eyeW.z < minEyeZ) push = Math.max(push, minEyeZ - eyeW.z);
     if (gripW.z < minGripZ) push = Math.max(push, minGripZ - gripW.z);
     if (minTipClearance != null && tipW.z < WALL_Z + minTipClearance) {
       push = Math.max(push, WALL_Z + minTipClearance - tipW.z);
     }
+    if (soft) push = Math.min(push, 0.08);
     if (push > 0) axe.position.z += push;
   }
 
   /**
-   * End-over-end toward the target:
-   *  - Build a throw plane facing the bull (blade +X → target at spin 0)
-   *  - Tumble around the horizontal right axis (≈ world X)
-   *  - Thin local Z stays on that axis so the EDGE swings into the board
+   * End-over-end toward the target around the lateral axis (≈ world X).
+   * Negative spin = reversed overhand flip into the board.
    */
   function orientAxeTowardTarget(spin = 0) {
     const toTarget = BULL.clone().sub(axe.position);
@@ -330,7 +328,6 @@ export function createThrowEngine(canvas) {
     else toTarget.normalize();
 
     const worldUp = new THREE.Vector3(0, 1, 0);
-    // right ≈ +X when throwing toward −Z — the axis the user asked for
     const right = new THREE.Vector3().crossVectors(toTarget, worldUp);
     if (right.lengthSq() < 1e-6) right.set(1, 0, 0);
     else right.normalize();
@@ -344,39 +341,34 @@ export function createThrowEngine(canvas) {
 
   function placeAxe(k, phase) {
     if (phase === "approach" || phase === "impact") {
-      const start = new THREE.Vector3(BULL.x - 0.2, BULL.y + 0.35, 2.2);
-      const mid = new THREE.Vector3(BULL.x + 0.15, BULL.y + 0.55, 1.1);
-      applyStuckPose(0.08);
+      applyStuckPose(0.14);
       const endPos = axe.position.clone();
       const endQ = axe.quaternion.clone();
 
       if (phase === "approach") {
         const ease = easeInOut(k);
-        const u = ease * 0.92;
-        const pos = new THREE.Vector3().copy(start).lerp(mid, u);
-        pos.z = Math.max(pos.z, WALL_Z + 0.85);
+        const start = new THREE.Vector3(BULL.x + 0.05, BULL.y + 0.2, 2.4);
+        const mid = new THREE.Vector3(BULL.x, BULL.y + 0.05, 1.15);
+        const pos = new THREE.Vector3().copy(start).lerp(mid, ease);
+        pos.z = Math.max(pos.z, WALL_Z + 0.7);
         axe.position.copy(pos);
 
-        // Spin → 0 (blade into board), then settle into stuck clock pose
-        orientAxeTowardTarget(THREE.MathUtils.lerp(0.5, 0.05, ease));
+        orientAxeTowardTarget(THREE.MathUtils.lerp(-0.9, -0.08, ease));
         const airQ = axe.quaternion.clone();
-        axe.quaternion.slerpQuaternions(airQ, endQ, ease);
-        axe.scale.setScalar(THREE.MathUtils.lerp(1.15, stuckScale, ease));
-        keepWoodOutside();
+        axe.quaternion.slerpQuaternions(airQ, endQ, ease * ease);
+        axe.scale.setScalar(THREE.MathUtils.lerp(1.12, stuckScale, ease));
+        keepWoodOutside(0.4);
       } else {
         const ease = easeOut(k);
-        axe.position.lerpVectors(
-          new THREE.Vector3(BULL.x + 0.1, BULL.y + 0.2, WALL_Z + 0.9),
-          endPos,
-          ease
-        );
-        if (ease < 0.4) {
-          orientAxeTowardTarget(0.05);
+        const pre = new THREE.Vector3(BULL.x + 0.02, BULL.y + 0.04, WALL_Z + 0.55);
+        axe.position.lerpVectors(pre, endPos, ease);
+        if (ease < 0.35) {
+          orientAxeTowardTarget(-0.06);
           const airQ = axe.quaternion.clone();
-          axe.quaternion.slerpQuaternions(airQ, endQ, ease / 0.4);
-          keepWoodOutside();
+          axe.quaternion.slerpQuaternions(airQ, endQ, ease / 0.35);
+          keepWoodOutside(0.15);
         } else {
-          applyStuckPose(0.06 + (ease - 0.4) * 0.05);
+          applyStuckPose(0.1 + (ease - 0.35) * 0.08);
         }
         axe.scale.setScalar(stuckScale);
       }
@@ -389,24 +381,23 @@ export function createThrowEngine(canvas) {
       lx = THREE.MathUtils.lerp(-0.9, -1.15, k);
       ly = THREE.MathUtils.lerp(-0.05, -0.25, k);
       lz = THREE.MathUtils.lerp(-2.2, -2.45, k);
-      // Cocked around X — blade UP, ready to flip into the board
-      spin = THREE.MathUtils.lerp(0.9, 1.2, k);
+      // REVERSED cock around X
+      spin = THREE.MathUtils.lerp(-0.9, -1.2, k);
       s = THREE.MathUtils.lerp(1.25, 1.4, k);
     } else if (phase === "release") {
       const u = k;
       lx = THREE.MathUtils.lerp(-1.1, 0.1, u);
       ly = THREE.MathUtils.lerp(-0.2, 0.35, Math.sin(u * Math.PI));
       lz = THREE.MathUtils.lerp(-2.4, -2.9, u);
-      // Around X toward target: up → toward camera → down → into board (2π)
-      spin = THREE.MathUtils.lerp(1.2, Math.PI * 2, u);
+      // REVERSED flip into the board
+      spin = THREE.MathUtils.lerp(-1.2, -Math.PI * 2, u);
       s = THREE.MathUtils.lerp(1.4, 1.25, u);
     } else {
       const u = k;
       lx = THREE.MathUtils.lerp(0.1, 0.02, u);
       ly = THREE.MathUtils.lerp(0.3, 0.1, u);
       lz = THREE.MathUtils.lerp(-2.9, -3.3, u);
-      // Second flip, land blade-into-wall again
-      spin = THREE.MathUtils.lerp(Math.PI * 2, Math.PI * 4, u);
+      spin = THREE.MathUtils.lerp(-Math.PI * 2, -Math.PI * 4, u);
       s = THREE.MathUtils.lerp(1.25, 1.1, u);
     }
 
@@ -1183,14 +1174,15 @@ function buildChips() {
     roughness: 0.88,
     metalness: 0.02,
   });
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < 14; i++) {
     const chip = new THREE.Mesh(
-      new THREE.BoxGeometry(0.04 + Math.random() * 0.05, 0.01, 0.03 + Math.random() * 0.04),
+      new THREE.BoxGeometry(0.03 + Math.random() * 0.05, 0.008, 0.02 + Math.random() * 0.035),
       mat
     );
-    const a = (i / 10) * Math.PI * 2;
-    chip.position.set(Math.cos(a) * 0.22, Math.sin(a) * 0.18, 0.08 + Math.random() * 0.08);
-    chip.rotation.set(Math.random(), Math.random(), Math.random());
+    const a = (i / 14) * Math.PI * 2 + Math.random() * 0.2;
+    const r = 0.12 + Math.random() * 0.28;
+    chip.position.set(Math.cos(a) * r, Math.sin(a) * r * 0.85, 0.1 + Math.random() * 0.18);
+    chip.rotation.set(Math.random() * 2, Math.random() * 2, Math.random() * 2);
     g.add(chip);
   }
   return g;
