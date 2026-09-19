@@ -3,6 +3,7 @@
  * Real hatchet proportions (blade ⊥ handle). No photos.
  */
 import * as THREE from "three";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 
 export function createThrowEngine(canvas) {
   const scene = new THREE.Scene();
@@ -19,16 +20,21 @@ export function createThrowEngine(canvas) {
   renderer.setClearColor(0x0a0908, 1);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.12;
+  renderer.toneMappingExposure = 1.22;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+  // Studio env so brushed steel actually reflects light
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+  pmrem.dispose();
 
   const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 80);
   camera.position.set(0, 1.2, 6.5);
 
-  scene.add(new THREE.AmbientLight(0xfff0e0, 0.42));
+  scene.add(new THREE.AmbientLight(0xfff0e0, 0.55));
 
-  const key = new THREE.DirectionalLight(0xffe2c8, 2.2);
+  const key = new THREE.DirectionalLight(0xffe2c8, 2.6);
   key.position.set(4, 8, 5);
   key.castShadow = true;
   key.shadow.mapSize.set(2048, 2048);
@@ -40,9 +46,13 @@ export function createThrowEngine(canvas) {
   key.shadow.camera.bottom = -8;
   scene.add(key);
 
-  const rim = new THREE.DirectionalLight(0x88aaff, 0.55);
+  const rim = new THREE.DirectionalLight(0xa8c4ff, 0.85);
   rim.position.set(-6, 3, -4);
   scene.add(rim);
+
+  const fill = new THREE.DirectionalLight(0xfff5e8, 0.7);
+  fill.position.set(-2, 4, 6);
+  scene.add(fill);
 
   const warm = new THREE.PointLight(0xff5533, 16, 22, 2);
   warm.position.set(0, 2.5, 2.2);
@@ -81,10 +91,12 @@ export function createThrowEngine(canvas) {
   axe.visible = false;
   scene.add(axe);
 
-  const axeLight = new THREE.PointLight(0xffe0c0, 28, 10, 1.6);
+  const axeLight = new THREE.PointLight(0xfff0dd, 42, 12, 1.5);
   scene.add(axeLight);
-  const axeRim = new THREE.PointLight(0x88aaff, 10, 6, 2);
+  const axeRim = new THREE.PointLight(0xb0c8ff, 18, 8, 1.8);
   scene.add(axeRim);
+  const axeSpec = new THREE.PointLight(0xffffff, 14, 5, 2);
+  scene.add(axeSpec);
 
   const flashMat = new THREE.MeshBasicMaterial({
     color: 0xffe8d0,
@@ -222,13 +234,16 @@ export function createThrowEngine(canvas) {
     if (axePhase) placeAxe(axeK, axePhase);
 
     if (axe.visible) {
-      axeLight.position.copy(axe.position).add(new THREE.Vector3(0.4, 0.5, 0.7));
-      axeLight.intensity = 28;
-      axeRim.position.copy(axe.position).add(new THREE.Vector3(-0.5, 0.2, 0.4));
-      axeRim.intensity = 10;
+      axeLight.position.copy(axe.position).add(new THREE.Vector3(0.55, 0.65, 0.9));
+      axeLight.intensity = 42;
+      axeRim.position.copy(axe.position).add(new THREE.Vector3(-0.6, 0.25, 0.5));
+      axeRim.intensity = 18;
+      axeSpec.position.copy(axe.position).add(new THREE.Vector3(0.9, 0.35, 0.4));
+      axeSpec.intensity = 16;
     } else {
       axeLight.intensity = 2;
       axeRim.intensity = 0;
+      axeSpec.intensity = 0;
     }
   }
 
@@ -810,12 +825,13 @@ function makeSteelMaps() {
   c.height = h;
   const ctx = c.getContext("2d");
 
-  // Cool steel base with slight warmth near edge
+  // Cool bright steel base
   const g = ctx.createRadialGradient(w * 0.35, h * 0.4, 20, w * 0.5, h * 0.5, w * 0.7);
-  g.addColorStop(0, "#f4f6f9");
-  g.addColorStop(0.35, "#c8d2de");
-  g.addColorStop(0.7, "#9aa7b6");
-  g.addColorStop(1, "#7a8796");
+  g.addColorStop(0, "#ffffff");
+  g.addColorStop(0.3, "#e8eef5");
+  g.addColorStop(0.55, "#c5d0dc");
+  g.addColorStop(0.8, "#a8b4c4");
+  g.addColorStop(1, "#8a96a8");
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, w, h);
 
@@ -958,26 +974,40 @@ function makeHandleWoodMaps() {
   c.height = h;
   const ctx = c.getContext("2d");
 
-  // Warm hickory base
+  // Warm hickory base — stronger contrast
   const base = ctx.createLinearGradient(0, 0, w, 0);
-  base.addColorStop(0, "#8b5a32");
-  base.addColorStop(0.25, "#c9955c");
-  base.addColorStop(0.5, "#e0b87a");
-  base.addColorStop(0.72, "#b87a42");
-  base.addColorStop(1, "#9a6238");
+  base.addColorStop(0, "#6e4324");
+  base.addColorStop(0.2, "#b87840");
+  base.addColorStop(0.45, "#e8c080");
+  base.addColorStop(0.7, "#c48848");
+  base.addColorStop(1, "#8a552e");
   ctx.fillStyle = base;
   ctx.fillRect(0, 0, w, h);
 
   // Longitudinal grain (along handle length = Y on UV)
-  for (let i = 0; i < 70; i++) {
-    const x = (i / 70) * w + Math.sin(i) * 3;
-    ctx.strokeStyle = `rgba(${40 + Math.random() * 30},${20 + Math.random() * 15},8,${0.1 + Math.random() * 0.22})`;
-    ctx.lineWidth = 0.5 + Math.random() * 2;
+  for (let i = 0; i < 90; i++) {
+    const x = (i / 90) * w + Math.sin(i * 1.7) * 4;
+    ctx.strokeStyle = `rgba(${25 + Math.random() * 35},${12 + Math.random() * 18},4,${0.18 + Math.random() * 0.35})`;
+    ctx.lineWidth = 0.6 + Math.random() * 2.4;
     ctx.beginPath();
     ctx.moveTo(x, 0);
     let xx = x;
-    for (let y = 0; y <= h; y += 20) {
-      xx += Math.sin(y * 0.008 + i * 0.4) * 1.8;
+    for (let y = 0; y <= h; y += 16) {
+      xx += Math.sin(y * 0.01 + i * 0.45) * 2.2;
+      ctx.lineTo(xx, y);
+    }
+    ctx.stroke();
+  }
+  // Lighter highlight grains
+  for (let i = 0; i < 25; i++) {
+    const x = Math.random() * w;
+    ctx.strokeStyle = `rgba(255,220,160,${0.06 + Math.random() * 0.1})`;
+    ctx.lineWidth = 0.5 + Math.random();
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    let xx = x;
+    for (let y = 0; y <= h; y += 24) {
+      xx += Math.sin(y * 0.007 + i) * 1.5;
       ctx.lineTo(xx, y);
     }
     ctx.stroke();
@@ -1177,10 +1207,11 @@ function buildHatchet() {
     map: handleWood.map,
     roughnessMap: handleWood.roughnessMap,
     bumpMap: handleWood.bumpMap,
-    bumpScale: 0.045,
-    roughness: 0.68,
-    metalness: 0.06,
+    bumpScale: 0.07,
+    roughness: 0.62,
+    metalness: 0.04,
     color: 0xffffff,
+    envMapIntensity: 0.35,
   });
 
   const steelMaps = makeSteelMaps();
@@ -1189,22 +1220,24 @@ function buildHatchet() {
     roughnessMap: steelMaps.roughnessMap,
     metalnessMap: steelMaps.metalnessMap,
     bumpMap: steelMaps.bumpMap,
-    bumpScale: 0.018,
-    roughness: 0.32,
+    bumpScale: 0.022,
+    roughness: 0.22,
     metalness: 1.0,
-    envMapIntensity: 1.2,
-    emissive: 0x1a222c,
-    emissiveIntensity: 0.08,
+    envMapIntensity: 1.85,
+    color: 0xffffff,
+    emissive: 0x101820,
+    emissiveIntensity: 0.04,
   });
   const steelDark = new THREE.MeshStandardMaterial({
     map: steelMaps.map,
     roughnessMap: steelMaps.roughnessMap,
     metalnessMap: steelMaps.metalnessMap,
     bumpMap: steelMaps.bumpMap,
-    bumpScale: 0.015,
-    color: 0x9aa4b2,
-    roughness: 0.42,
-    metalness: 0.95,
+    bumpScale: 0.018,
+    color: 0xc8d2e0,
+    roughness: 0.34,
+    metalness: 0.98,
+    envMapIntensity: 1.5,
   });
   const leather = makeLeatherMaps();
   const wrapMat = new THREE.MeshStandardMaterial({

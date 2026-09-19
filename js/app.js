@@ -61,7 +61,7 @@ function initParallax() {
     const layers = section.querySelectorAll("[data-speed]");
     layers.forEach((el) => {
       const speed = parseFloat(el.dataset.speed || "0.5");
-      const travel = (1 - speed) * 140;
+      const travel = (1 - speed) * 90;
       gsap.fromTo(
         el,
         { y: -travel * 0.45 },
