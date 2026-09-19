@@ -48,12 +48,20 @@ export function createThrowEngine(canvas) {
   warm.position.set(0, 2.5, 2.2);
   scene.add(warm);
 
+  const groundMaps = makeDarkWoodMaps(512, 512);
+  groundMaps.map.colorSpace = THREE.SRGBColorSpace;
+  groundMaps.map.wrapS = groundMaps.map.wrapT = THREE.RepeatWrapping;
+  groundMaps.map.repeat.set(4, 4);
   const ground = new THREE.Mesh(
     new THREE.CircleGeometry(14, 64),
     new THREE.MeshStandardMaterial({
-      color: 0x14100c,
-      roughness: 0.96,
-      metalness: 0.04,
+      map: groundMaps.map,
+      roughnessMap: groundMaps.roughnessMap,
+      bumpMap: groundMaps.bumpMap,
+      bumpScale: 0.04,
+      color: 0x5a4a3a,
+      roughness: 0.95,
+      metalness: 0.02,
     })
   );
   ground.rotation.x = -Math.PI / 2;
@@ -98,7 +106,7 @@ export function createThrowEngine(canvas) {
 
   // Local landmarks on the hatchet group
   // Handle along +Y (head) / −Y (grip). Blade tip at +X.
-  const BLADE_TIP = new THREE.Vector3(0.88, 0.48, 0);
+  const BLADE_TIP = new THREE.Vector3(0.68, 0.48, 0);
   const EYE = new THREE.Vector3(0.0, 0.4, 0);
   const GRIP = new THREE.Vector3(0, -1.25, 0);
 
@@ -284,8 +292,8 @@ export function createThrowEngine(canvas) {
     const eyeW = EYE.clone().applyMatrix4(axe.matrixWorld);
     const gripW = GRIP.clone().applyMatrix4(axe.matrixWorld);
     const tipW = BLADE_TIP.clone().applyMatrix4(axe.matrixWorld);
-    const minEyeZ = WALL_Z + 0.28;
-    const minGripZ = WALL_Z + 0.55;
+    const minEyeZ = WALL_Z + 0.42;
+    const minGripZ = WALL_Z + 0.75;
     let push = 0;
     if (eyeW.z < minEyeZ) push = Math.max(push, minEyeZ - eyeW.z);
     if (gripW.z < minGripZ) push = Math.max(push, minGripZ - gripW.z);
@@ -469,16 +477,22 @@ export function createThrowEngine(canvas) {
   };
 }
 
-/** Wood planks + rings + green killshots at clock 1:30 and 10:30 */
+/** Wood planks + rings + green killshots OUTSIDE the blue ring at 1:30 / 10:30 */
 function buildVirtualTarget(group, bull) {
-  const woodTex = makeWoodTexture();
-  woodTex.colorSpace = THREE.SRGBColorSpace;
-  woodTex.wrapS = woodTex.wrapT = THREE.RepeatWrapping;
+  const wood = makeWoodMaps(512, 1024);
+  wood.map.colorSpace = THREE.SRGBColorSpace;
+  wood.map.wrapS = wood.map.wrapT = THREE.RepeatWrapping;
+  wood.map.repeat.set(1, 2);
+  wood.roughnessMap.wrapS = wood.roughnessMap.wrapT = THREE.RepeatWrapping;
+  wood.bumpMap.wrapS = wood.bumpMap.wrapT = THREE.RepeatWrapping;
 
   const plankMat = new THREE.MeshStandardMaterial({
-    map: woodTex,
-    roughness: 0.88,
-    metalness: 0.03,
+    map: wood.map,
+    roughnessMap: wood.roughnessMap,
+    bumpMap: wood.bumpMap,
+    bumpScale: 0.035,
+    roughness: 0.92,
+    metalness: 0.02,
   });
 
   const plankW = 0.52;
@@ -491,8 +505,18 @@ function buildVirtualTarget(group, bull) {
       new THREE.BoxGeometry(plankW - 0.02, plankH, plankD),
       plankMat.clone()
     );
-    const shade = 0.92 + (i % 3) * 0.04;
-    plank.material.color.setRGB(shade, shade * 0.88, shade * 0.72);
+    // Per-plank tone: warmer / cooler / darker
+    const tones = [
+      [1.0, 0.92, 0.78],
+      [0.95, 0.86, 0.7],
+      [0.88, 0.78, 0.62],
+      [1.02, 0.9, 0.72],
+    ];
+    const t = tones[i % tones.length];
+    plank.material.color.setRGB(t[0], t[1], t[2]);
+    plank.material.map = wood.map.clone();
+    plank.material.map.needsUpdate = true;
+    plank.material.map.offset.set((i * 0.17) % 1, (i * 0.09) % 1);
     plank.position.set(-totalW / 2 + plankW * 0.5 + i * plankW, 1.4, -0.14);
     plank.castShadow = true;
     plank.receiveShadow = true;
@@ -500,10 +524,16 @@ function buildVirtualTarget(group, bull) {
     group.add(plank);
   }
 
+  const railTex = makeDarkWoodMaps(256, 256);
+  railTex.map.colorSpace = THREE.SRGBColorSpace;
   const railMat = new THREE.MeshStandardMaterial({
-    color: 0x3a2a1c,
-    roughness: 0.8,
-    metalness: 0.05,
+    map: railTex.map,
+    roughnessMap: railTex.roughnessMap,
+    bumpMap: railTex.bumpMap,
+    bumpScale: 0.02,
+    roughness: 0.85,
+    metalness: 0.04,
+    color: 0xffffff,
   });
   const topRail = new THREE.Mesh(new THREE.BoxGeometry(totalW + 0.15, 0.18, 0.4), railMat);
   topRail.position.set(0, 1.4 + plankH / 2 + 0.05, -0.1);
@@ -516,12 +546,15 @@ function buildVirtualTarget(group, bull) {
   const cx = bull.x;
   const cy = bull.y;
 
-  function paintRing(rOuter, rInner, color) {
-    const geo = new THREE.RingGeometry(rInner, rOuter, 72);
+  function paintRing(rOuter, rInner, hex) {
+    const paint = makePaintMaps(hex);
+    paint.map.colorSpace = THREE.SRGBColorSpace;
+    const geo = new THREE.RingGeometry(rInner, rOuter, 96);
     const mat = new THREE.MeshStandardMaterial({
-      color,
-      roughness: 0.65,
-      metalness: 0.08,
+      map: paint.map,
+      roughnessMap: paint.roughnessMap,
+      roughness: 0.72,
+      metalness: 0.04,
       side: THREE.DoubleSide,
     });
     const m = new THREE.Mesh(geo, mat);
@@ -529,57 +562,321 @@ function buildVirtualTarget(group, bull) {
     group.add(m);
   }
 
-  paintRing(1.42, 1.28, 0x2a5f9e);
-  paintRing(0.92, 0.78, 0xc41e12);
+  paintRing(1.42, 1.28, "#2a5f9e");
+  paintRing(0.92, 0.78, "#c41e12");
+
+  const bullPaint = makePaintMaps("#1a1410");
+  bullPaint.map.colorSpace = THREE.SRGBColorSpace;
   const bullMesh = new THREE.Mesh(
-    new THREE.CircleGeometry(0.3, 48),
-    new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.55 })
+    new THREE.CircleGeometry(0.3, 64),
+    new THREE.MeshStandardMaterial({
+      map: bullPaint.map,
+      roughnessMap: bullPaint.roughnessMap,
+      roughness: 0.7,
+      metalness: 0.08,
+    })
   );
   bullMesh.position.set(cx, cy, ringZ + 0.005);
   group.add(bullMesh);
 
-  // Green killshots at clock 1:30 and mirror 10:30
-  function greenAt(hour, radius = 1.05) {
+  // Green killshots OUTSIDE the blue ring (blue outer = 1.42)
+  function greenAt(hour, radius = 1.68) {
     const rad = (hour / 12) * Math.PI * 2;
+    const gPaint = makePaintMaps("#1f9d55");
+    gPaint.map.colorSpace = THREE.SRGBColorSpace;
     const g = new THREE.Mesh(
       new THREE.CircleGeometry(0.13, 32),
-      new THREE.MeshStandardMaterial({ color: 0x1f9d55, roughness: 0.55 })
+      new THREE.MeshStandardMaterial({
+        map: gPaint.map,
+        roughness: 0.6,
+        metalness: 0.05,
+      })
     );
     g.position.set(cx + Math.sin(rad) * radius, cy + Math.cos(rad) * radius, ringZ + 0.008);
     group.add(g);
   }
   greenAt(1.5);
-  greenAt(10.5); // قرینهٔ ۱:۳۰ نسبت به محور ۱۲–۶
+  greenAt(10.5);
 }
 
-function makeWoodTexture() {
-  const c = document.createElement("canvas");
-  c.width = 256;
-  c.height = 512;
-  const ctx = c.getContext("2d");
-  ctx.fillStyle = "#c4a882";
-  ctx.fillRect(0, 0, 256, 512);
-  for (let i = 0; i < 40; i++) {
-    const x = Math.random() * 256;
-    ctx.strokeStyle = `rgba(90,60,35,${0.08 + Math.random() * 0.15})`;
-    ctx.lineWidth = 1 + Math.random() * 3;
+/** Layered oak-like wood: grain, pores, knots, stain */
+function makeWoodMaps(w = 512, h = 1024) {
+  const color = document.createElement("canvas");
+  color.width = w;
+  color.height = h;
+  const ctx = color.getContext("2d");
+
+  // Base stain gradient
+  const base = ctx.createLinearGradient(0, 0, w, 0);
+  base.addColorStop(0, "#b8956a");
+  base.addColorStop(0.35, "#d4b089");
+  base.addColorStop(0.55, "#c4a074");
+  base.addColorStop(0.8, "#a87d52");
+  base.addColorStop(1, "#c9a57a");
+  ctx.fillStyle = base;
+  ctx.fillRect(0, 0, w, h);
+
+  // Soft vertical bands (growth rings / plank strips)
+  for (let i = 0; i < 18; i++) {
+    const x = (i / 18) * w + Math.random() * 8;
+    const g = ctx.createLinearGradient(x - 12, 0, x + 12, 0);
+    g.addColorStop(0, "rgba(90,55,28,0)");
+    g.addColorStop(0.5, `rgba(70,40,18,${0.06 + Math.random() * 0.1})`);
+    g.addColorStop(1, "rgba(90,55,28,0)");
+    ctx.fillStyle = g;
+    ctx.fillRect(x - 14, 0, 28, h);
+  }
+
+  // Flowing grain lines
+  for (let i = 0; i < 90; i++) {
+    const x0 = Math.random() * w;
+    ctx.strokeStyle = `rgba(${50 + Math.random() * 40},${28 + Math.random() * 20},${10}, ${0.08 + Math.random() * 0.18})`;
+    ctx.lineWidth = 0.6 + Math.random() * 2.2;
     ctx.beginPath();
-    ctx.moveTo(x, 0);
-    ctx.bezierCurveTo(x + 8, 160, x - 10, 320, x + 4, 512);
+    ctx.moveTo(x0, 0);
+    let x = x0;
+    for (let y = 0; y < h; y += 24) {
+      x += Math.sin(y * 0.01 + i) * 6 + (Math.random() - 0.5) * 4;
+      ctx.lineTo(x, y);
+    }
     ctx.stroke();
   }
-  for (let i = 0; i < 80; i++) {
-    ctx.fillStyle = `rgba(60,40,20,${Math.random() * 0.12})`;
-    ctx.fillRect(Math.random() * 256, Math.random() * 512, 2, 8 + Math.random() * 20);
+
+  // Pores / flecks
+  for (let i = 0; i < 1200; i++) {
+    ctx.fillStyle = `rgba(40,22,10,${Math.random() * 0.18})`;
+    ctx.fillRect(Math.random() * w, Math.random() * h, 1 + Math.random() * 2, 1 + Math.random() * 6);
   }
-  const tex = new THREE.CanvasTexture(c);
-  tex.anisotropy = 4;
-  return tex;
+
+  // A few knots
+  for (let k = 0; k < 5; k++) {
+    const kx = 40 + Math.random() * (w - 80);
+    const ky = 60 + Math.random() * (h - 120);
+    const kr = 10 + Math.random() * 18;
+    for (let r = kr; r > 2; r -= 2) {
+      ctx.strokeStyle = `rgba(55,30,12,${0.15 + (kr - r) / kr * 0.25})`;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.ellipse(kx, ky, r, r * 0.7, Math.random() * 0.5, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.fillStyle = "rgba(40,22,10,0.35)";
+    ctx.beginPath();
+    ctx.ellipse(kx, ky, 3, 2, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Impact scars / axe marks
+  for (let i = 0; i < 25; i++) {
+    const x = Math.random() * w;
+    const y = Math.random() * h;
+    ctx.strokeStyle = `rgba(30,15,8,${0.12 + Math.random() * 0.2})`;
+    ctx.lineWidth = 1 + Math.random() * 2;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x + (Math.random() - 0.5) * 30, y + 8 + Math.random() * 20);
+    ctx.stroke();
+  }
+
+  // Roughness + bump from luminance-ish noise
+  const rough = document.createElement("canvas");
+  rough.width = w;
+  rough.height = h;
+  const rctx = rough.getContext("2d");
+  rctx.fillStyle = "#9a9a9a";
+  rctx.fillRect(0, 0, w, h);
+  for (let i = 0; i < 2000; i++) {
+    const v = 80 + Math.random() * 120;
+    rctx.fillStyle = `rgb(${v},${v},${v})`;
+    rctx.fillRect(Math.random() * w, Math.random() * h, 1 + Math.random() * 3, 2 + Math.random() * 10);
+  }
+  // Grain as darker roughness streaks
+  for (let i = 0; i < 60; i++) {
+    const x = Math.random() * w;
+    rctx.strokeStyle = `rgba(40,40,40,${0.2 + Math.random() * 0.3})`;
+    rctx.lineWidth = 1 + Math.random() * 2;
+    rctx.beginPath();
+    rctx.moveTo(x, 0);
+    rctx.bezierCurveTo(x + 10, h * 0.3, x - 8, h * 0.7, x + 4, h);
+    rctx.stroke();
+  }
+
+  const bump = document.createElement("canvas");
+  bump.width = w;
+  bump.height = h;
+  const bctx = bump.getContext("2d");
+  bctx.fillStyle = "#808080";
+  bctx.fillRect(0, 0, w, h);
+  for (let i = 0; i < 80; i++) {
+    const x = Math.random() * w;
+    bctx.strokeStyle = `rgba(${100 + Math.random() * 80},${100 + Math.random() * 80},${100 + Math.random() * 80},0.5)`;
+    bctx.lineWidth = 1 + Math.random() * 3;
+    bctx.beginPath();
+    bctx.moveTo(x, 0);
+    bctx.bezierCurveTo(x + 8, h * 0.33, x - 10, h * 0.66, x + 2, h);
+    bctx.stroke();
+  }
+
+  const map = new THREE.CanvasTexture(color);
+  const roughnessMap = new THREE.CanvasTexture(rough);
+  const bumpMap = new THREE.CanvasTexture(bump);
+  map.anisotropy = 8;
+  roughnessMap.anisotropy = 4;
+  bumpMap.anisotropy = 4;
+  return { map, roughnessMap, bumpMap };
+}
+
+function makeDarkWoodMaps(w = 256, h = 256) {
+  const c = document.createElement("canvas");
+  c.width = w;
+  c.height = h;
+  const ctx = c.getContext("2d");
+  ctx.fillStyle = "#3a2a1c";
+  ctx.fillRect(0, 0, w, h);
+  for (let i = 0; i < 40; i++) {
+    ctx.strokeStyle = `rgba(20,12,6,${0.15 + Math.random() * 0.25})`;
+    ctx.lineWidth = 1 + Math.random() * 2;
+    const x = Math.random() * w;
+    ctx.beginPath();
+    ctx.moveTo(0, x);
+    ctx.bezierCurveTo(w * 0.3, x + 4, w * 0.7, x - 4, w, x + 2);
+    ctx.stroke();
+  }
+  const map = new THREE.CanvasTexture(c);
+  const roughnessMap = new THREE.CanvasTexture(c);
+  const bumpMap = map;
+  return { map, roughnessMap, bumpMap };
+}
+
+/** Chalky painted ring / killshot with brush noise */
+function makePaintMaps(hex) {
+  const w = 256;
+  const h = 256;
+  const c = document.createElement("canvas");
+  c.width = w;
+  c.height = h;
+  const ctx = c.getContext("2d");
+  ctx.fillStyle = hex;
+  ctx.fillRect(0, 0, w, h);
+  // Brush streaks
+  for (let i = 0; i < 80; i++) {
+    ctx.strokeStyle = `rgba(255,255,255,${0.03 + Math.random() * 0.08})`;
+    ctx.lineWidth = 2 + Math.random() * 6;
+    const y = Math.random() * h;
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.quadraticCurveTo(w * 0.5, y + (Math.random() - 0.5) * 20, w, y + (Math.random() - 0.5) * 10);
+    ctx.stroke();
+  }
+  for (let i = 0; i < 60; i++) {
+    ctx.strokeStyle = `rgba(0,0,0,${0.04 + Math.random() * 0.1})`;
+    ctx.lineWidth = 1 + Math.random() * 3;
+    const y = Math.random() * h;
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(w, y + (Math.random() - 0.5) * 8);
+    ctx.stroke();
+  }
+  // Specks / wear
+  for (let i = 0; i < 200; i++) {
+    ctx.fillStyle = `rgba(${Math.random() > 0.5 ? 255 : 0},${Math.random() > 0.5 ? 255 : 0},${Math.random() > 0.5 ? 255 : 0},${Math.random() * 0.12})`;
+    ctx.fillRect(Math.random() * w, Math.random() * h, 1 + Math.random() * 3, 1 + Math.random() * 3);
+  }
+
+  const r = document.createElement("canvas");
+  r.width = w;
+  r.height = h;
+  const rctx = r.getContext("2d");
+  rctx.fillStyle = "#b0b0b0";
+  rctx.fillRect(0, 0, w, h);
+  for (let i = 0; i < 300; i++) {
+    const v = 60 + Math.random() * 140;
+    rctx.fillStyle = `rgb(${v},${v},${v})`;
+    rctx.fillRect(Math.random() * w, Math.random() * h, 2, 2);
+  }
+
+  return {
+    map: new THREE.CanvasTexture(c),
+    roughnessMap: new THREE.CanvasTexture(r),
+  };
+}
+
+/** Brushed / worn steel for the hatchet head */
+function makeSteelMaps() {
+  const w = 256;
+  const h = 256;
+  const c = document.createElement("canvas");
+  c.width = w;
+  c.height = h;
+  const ctx = c.getContext("2d");
+  const g = ctx.createLinearGradient(0, 0, w, h);
+  g.addColorStop(0, "#f0f3f7");
+  g.addColorStop(0.35, "#c8d0da");
+  g.addColorStop(0.65, "#a8b2be");
+  g.addColorStop(1, "#d5dde6");
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, w, h);
+
+  // Horizontal brush lines
+  for (let i = 0; i < 120; i++) {
+    const y = Math.random() * h;
+    const bright = Math.random() > 0.5;
+    ctx.strokeStyle = bright
+      ? `rgba(255,255,255,${0.04 + Math.random() * 0.1})`
+      : `rgba(30,40,50,${0.05 + Math.random() * 0.12})`;
+    ctx.lineWidth = 0.5 + Math.random() * 1.5;
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(w, y + (Math.random() - 0.5) * 2);
+    ctx.stroke();
+  }
+  // Scratches / wear
+  for (let i = 0; i < 40; i++) {
+    ctx.strokeStyle = `rgba(20,25,30,${0.08 + Math.random() * 0.15})`;
+    ctx.lineWidth = 0.5;
+    const x = Math.random() * w;
+    const y = Math.random() * h;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x + 10 + Math.random() * 40, y + (Math.random() - 0.5) * 6);
+    ctx.stroke();
+  }
+
+  const r = document.createElement("canvas");
+  r.width = w;
+  r.height = h;
+  const rctx = r.getContext("2d");
+  rctx.fillStyle = "#6a6a6a";
+  rctx.fillRect(0, 0, w, h);
+  for (let i = 0; i < 100; i++) {
+    const y = Math.random() * h;
+    const v = 40 + Math.random() * 160;
+    rctx.strokeStyle = `rgb(${v},${v},${v})`;
+    rctx.lineWidth = 1;
+    rctx.beginPath();
+    rctx.moveTo(0, y);
+    rctx.lineTo(w, y);
+    rctx.stroke();
+  }
+
+  const map = new THREE.CanvasTexture(c);
+  map.colorSpace = THREE.SRGBColorSpace;
+  map.anisotropy = 4;
+  return {
+    map,
+    roughnessMap: new THREE.CanvasTexture(r),
+  };
 }
 
 function buildChips() {
   const g = new THREE.Group();
-  const mat = new THREE.MeshStandardMaterial({ color: 0xb8956a, roughness: 0.9 });
+  const wood = makeWoodMaps(128, 128);
+  wood.map.colorSpace = THREE.SRGBColorSpace;
+  const mat = new THREE.MeshStandardMaterial({
+    map: wood.map,
+    roughness: 0.88,
+    metalness: 0.02,
+  });
   for (let i = 0; i < 10; i++) {
     const chip = new THREE.Mesh(
       new THREE.BoxGeometry(0.04 + Math.random() * 0.05, 0.01, 0.03 + Math.random() * 0.04),
@@ -603,27 +900,40 @@ function buildChips() {
 function buildHatchet() {
   const g = new THREE.Group();
 
+  const handleWood = makeWoodMaps(256, 512);
+  handleWood.map.colorSpace = THREE.SRGBColorSpace;
+  handleWood.map.wrapS = handleWood.map.wrapT = THREE.RepeatWrapping;
+  handleWood.map.repeat.set(1, 2);
   const wood = new THREE.MeshStandardMaterial({
-    color: 0xc48a4a,
-    roughness: 0.62,
-    metalness: 0.05,
+    map: handleWood.map,
+    roughnessMap: handleWood.roughnessMap,
+    bumpMap: handleWood.bumpMap,
+    bumpScale: 0.02,
+    roughness: 0.72,
+    metalness: 0.04,
+    color: 0xe8c49a,
   });
+
+  const steelMaps = makeSteelMaps();
   const steel = new THREE.MeshStandardMaterial({
-    color: 0xdde3ec,
-    roughness: 0.22,
-    metalness: 0.98,
-    emissive: 0x334455,
-    emissiveIntensity: 0.22,
+    map: steelMaps.map,
+    roughnessMap: steelMaps.roughnessMap,
+    roughness: 0.28,
+    metalness: 0.96,
+    emissive: 0x222833,
+    emissiveIntensity: 0.12,
   });
   const steelDark = new THREE.MeshStandardMaterial({
-    color: 0x6a7382,
-    roughness: 0.35,
-    metalness: 0.92,
+    map: steelMaps.map,
+    roughnessMap: steelMaps.roughnessMap,
+    color: 0x8892a0,
+    roughness: 0.4,
+    metalness: 0.9,
   });
   const wrapMat = new THREE.MeshStandardMaterial({
     color: 0x8b1a12,
-    roughness: 0.5,
-    metalness: 0.12,
+    roughness: 0.55,
+    metalness: 0.1,
   });
 
   // —— Handle (wood) ——
