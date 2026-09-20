@@ -1201,27 +1201,31 @@ function buildHatchet() {
   });
 
   const steelMaps = makeSteelMaps();
-  const steel = new THREE.MeshStandardMaterial({
+  const steel = new THREE.MeshPhysicalMaterial({
     map: steelMaps.map,
     roughnessMap: steelMaps.roughnessMap,
     metalnessMap: steelMaps.metalnessMap,
     bumpMap: steelMaps.bumpMap,
     bumpScale: 0.008,
-    roughness: 0.18,
+    roughness: 0.14,
     metalness: 1.0,
-    envMapIntensity: 2.2,
+    envMapIntensity: 2.6,
+    clearcoat: 0.35,
+    clearcoatRoughness: 0.22,
     color: 0xffffff,
   });
-  const steelDark = new THREE.MeshStandardMaterial({
+  const steelDark = new THREE.MeshPhysicalMaterial({
     map: steelMaps.map,
     roughnessMap: steelMaps.roughnessMap,
     metalnessMap: steelMaps.metalnessMap,
     bumpMap: steelMaps.bumpMap,
     bumpScale: 0.007,
-    color: 0xe4e8ef,
-    roughness: 0.26,
+    color: 0xe8ecf2,
+    roughness: 0.22,
     metalness: 1.0,
-    envMapIntensity: 1.8,
+    envMapIntensity: 2.1,
+    clearcoat: 0.2,
+    clearcoatRoughness: 0.35,
   });
   const leather = makeLeatherMaps();
   const wrapMat = new THREE.MeshStandardMaterial({
