@@ -20,13 +20,13 @@ export function createThrowEngine(canvas) {
   renderer.setClearColor(0x0a0908, 1);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.22;
+  renderer.toneMappingExposure = 1.28;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
   // Studio env so brushed steel actually reflects light
   const pmrem = new THREE.PMREMGenerator(renderer);
-  scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+  scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.02).texture;
   pmrem.dispose();
 
   const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 80);
@@ -858,19 +858,19 @@ function makeSteelMaps() {
       // Soft heat tint near center-left
       const heat = Math.exp(-((nx - 0.35) ** 2 * 8 + (ny - 0.45) ** 2 * 6));
 
-      let v = 155 + brush * 55 + large * 18;
-      let r = v + 4;
-      let g = v + 2;
-      let b = v + 8;
-      // Oil / heat blue-amber
-      r += heat * 12;
-      g += heat * 6;
-      b += heat * 28;
-      // Cutting-edge polish (right side brighter)
+      let v = 168 + brush * 48 + large * 14;
+      let r = v + 6;
+      let g = v + 5;
+      let b = v + 4;
+      // Soft oil tint — keep subtle so metal stays silver, not blue plastic
+      r += heat * 8;
+      g += heat * 4;
+      b += heat * 14;
+      // Cutting-edge polish (right side brighter / cleaner)
       const edge = Math.max(0, (nx - 0.68) / 0.32);
-      r += edge * 38;
-      g += edge * 38;
-      b += edge * 42;
+      r += edge * 42;
+      g += edge * 42;
+      b += edge * 40;
       // Micro pits
       if (pit > 0.86) {
         const p = (pit - 0.86) / 0.14;
@@ -1206,10 +1206,10 @@ function buildHatchet() {
     roughnessMap: steelMaps.roughnessMap,
     metalnessMap: steelMaps.metalnessMap,
     bumpMap: steelMaps.bumpMap,
-    bumpScale: 0.012,
-    roughness: 0.28,
+    bumpScale: 0.008,
+    roughness: 0.18,
     metalness: 1.0,
-    envMapIntensity: 1.55,
+    envMapIntensity: 2.2,
     color: 0xffffff,
   });
   const steelDark = new THREE.MeshStandardMaterial({
@@ -1217,11 +1217,11 @@ function buildHatchet() {
     roughnessMap: steelMaps.roughnessMap,
     metalnessMap: steelMaps.metalnessMap,
     bumpMap: steelMaps.bumpMap,
-    bumpScale: 0.01,
-    color: 0xd0d6e0,
-    roughness: 0.38,
-    metalness: 0.96,
-    envMapIntensity: 1.25,
+    bumpScale: 0.007,
+    color: 0xe4e8ef,
+    roughness: 0.26,
+    metalness: 1.0,
+    envMapIntensity: 1.8,
   });
   const leather = makeLeatherMaps();
   const wrapMat = new THREE.MeshStandardMaterial({
